@@ -2,57 +2,78 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:system-ui,sans-serif;}
-#app{display:flex;flex-direction:column;height:680px;background:#111;}
-#setup{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;padding:20px;}
-#setup h2{font-size:22px;color:#eee;font-weight:700;letter-spacing:.05em;}
-#setup .sub{font-size:12px;color:#666;}
-#cnt-row{display:flex;gap:8px;align-items:center;}
-#cnt-row label{font-size:12px;color:#aaa;}
-.cnt-btn{width:36px;height:36px;border-radius:50%;border:2px solid #444;background:#222;color:#ccc;font-size:16px;font-weight:700;cursor:pointer;}
+#app{display:flex;flex-direction:column;height:100dvh;min-height:600px;background:#111;}
+#setup{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:18px;padding:24px;}
+#setup h2{font-size:26px;color:#eee;font-weight:700;letter-spacing:.05em;}
+#setup .sub{font-size:13px;color:#666;}
+#cnt-row{display:flex;gap:10px;align-items:center;}
+#cnt-row label{font-size:13px;color:#aaa;}
+.cnt-btn{width:42px;height:42px;border-radius:50%;border:2px solid #444;background:#222;color:#ccc;font-size:18px;font-weight:700;cursor:pointer;}
 .cnt-btn.active{border-color:#3db87a;color:#3db87a;background:#001a0e;}
-#pconf{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
-.pc{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 14px;background:#1a1a1a;border-radius:8px;border:1px solid #333;}
-.pc-name{font-size:12px;font-weight:600;color:#ccc;}
-.copts{display:flex;gap:6px;}
-.co{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;}
-.co.active{border-color:#fff;}.co.used{opacity:.28;cursor:not-allowed;}
-#start-btn{padding:10px 30px;background:#1a3d28;border:1px solid #2a6040;color:#3db87a;font-size:14px;font-weight:600;border-radius:6px;cursor:pointer;}
+#pconf{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+.pc{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 16px;background:#1a1a1a;border-radius:10px;border:1px solid #333;}
+.pc-name{font-size:13px;font-weight:600;color:#ccc;}
+.copts{display:flex;gap:8px;}
+.co{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;}
+.co.active{border-color:#fff;box-shadow:0 0 0 1px #fff;}.co.used{opacity:.25;cursor:not-allowed;}
+#start-btn{padding:12px 36px;background:#1a3d28;border:1px solid #2a6040;color:#3db87a;font-size:15px;font-weight:600;border-radius:8px;cursor:pointer;letter-spacing:.03em;}
 #start-btn:hover{background:#1f4d33;}
+
 #game{display:none;flex-direction:column;height:100%;}
-#hdr{display:flex;align-items:center;justify-content:space-between;padding:5px 12px;background:#1a1a1a;border-bottom:1px solid #222;flex-shrink:0;}
-#hdr h2{font-size:13px;font-weight:600;color:#eee;}
+#hdr{display:flex;align-items:center;justify-content:space-between;padding:6px 14px;background:#1a1a1a;border-bottom:1px solid #222;flex-shrink:0;}
+#hdr h2{font-size:14px;font-weight:600;color:#eee;}
 #hint{font-size:10px;color:#555;}
-#sbar{padding:3px 10px;background:#161616;border-bottom:1px solid #1e1e1e;font-size:11px;flex-shrink:0;min-height:24px;display:flex;align-items:center;gap:8px;}
+#sbar{padding:4px 12px;background:#161616;border-bottom:1px solid #1e1e1e;font-size:12px;flex-shrink:0;min-height:26px;display:flex;align-items:center;gap:8px;}
 #msg{flex:1;}
 #msg.good{color:#3db87a;}#msg.bad{color:#e05555;}#msg.info{color:#5599dd;}#msg.warn{color:#cc8833;}
-#phase-ind{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600;flex-shrink:0;}
+#phase-ind{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;flex-shrink:0;}
 .pf{background:#3d2800;color:#cc8833;border:1px solid #553300;}
 .pfr{background:#002a1a;color:#3db87a;border:1px solid #004422;}
 .pi{background:#222;color:#555;border:1px solid #333;}
+
 #main{display:flex;flex:1;overflow:hidden;}
-#ba{flex:1;overflow:hidden;}
+#ba{flex:1;overflow:hidden;min-width:0;}
 #bc{display:block;}
-#panels{width:196px;background:#141414;border-left:1px solid #1e1e1e;display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;}
-.pp{padding:7px 8px;border-bottom:1px solid #1e1e1e;flex-shrink:0;}
-.pp.act{background:#1c1c1c;}
-.pp-hdr{display:flex;align-items:center;gap:5px;margin-bottom:5px;}
-.pp-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
-.pp-name{font-size:11px;font-weight:600;color:#bbb;}
-.pp-score{margin-left:auto;font-size:12px;font-weight:700;}
-.hgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;}
-.hw{cursor:pointer;border-radius:4px;border:1.5px solid #2a2a2a;padding:1px;background:#1a1a1a;position:relative;}
-.hw:hover{border-color:#5599dd;}.hw.sel{border-color:#3db87a;border-width:2px;background:#001a0e;}
-.hw.forced{border-color:#cc8833;border-width:2px;background:#1a1000;}
-.hw.inact{opacity:.38;pointer-events:none;}
+
+/* Side panel — wider, scrollable */
+#panels{
+  width:240px;
+  background:#161616;
+  border-left:1px solid #222;
+  display:flex;flex-direction:column;
+  overflow-y:auto;
+  flex-shrink:0;
+}
+.pp{padding:10px 10px 8px;border-bottom:1px solid #1e1e1e;flex-shrink:0;}
+.pp.act{background:#1e1e1e;}
+.pp-hdr{display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+.pp-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+.pp-name{font-size:12px;font-weight:600;color:#bbb;}
+.pp-score{margin-left:auto;font-size:14px;font-weight:700;}
+.hgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+.hw{cursor:pointer;border-radius:6px;border:2px solid #2a2a2a;padding:2px;background:#1a1a1a;position:relative;}
+.hw:hover{border-color:#5599dd;}
+.hw.sel{border-color:#3db87a;background:#001a0e;}
+.hw.forced{border-color:#cc8833;background:#1a1000;}
+.hw.inact{opacity:.35;pointer-events:none;}
 .hw canvas{display:block;width:100%;}
-.badge{position:absolute;top:1px;right:1px;font-size:7px;font-weight:700;padding:1px 2px;border-radius:2px;background:#cc8833;color:#fff;line-height:1;}
-#bbar{display:flex;align-items:center;gap:6px;padding:5px 10px;background:#1a1a1a;border-top:1px solid #222;flex-shrink:0;}
-#bbar button{font-size:11px;padding:4px 10px;border-radius:4px;border:1px solid #444;background:#222;color:#bbb;cursor:pointer;}
+.badge{position:absolute;top:2px;right:2px;font-size:8px;font-weight:700;padding:1px 3px;border-radius:3px;background:#cc8833;color:#fff;line-height:1;}
+
+#bbar{display:flex;align-items:center;gap:8px;padding:6px 12px;background:#1a1a1a;border-top:1px solid #222;flex-shrink:0;}
+#bbar button{font-size:12px;padding:6px 12px;border-radius:5px;border:1px solid #444;background:#252525;color:#bbb;cursor:pointer;}
 #bbar button:hover{background:#333;color:#fff;}
 .bpri{background:#1a3d28!important;border-color:#2a6040!important;color:#3db87a!important;}
-#bag-disp{font-size:11px;color:#555;margin-left:auto;}
-#bag-disp span{color:#aaa;font-weight:600;}
+#bag-disp{font-size:12px;color:#555;margin-left:auto;}
+#bag-disp span{color:#bbb;font-weight:600;}
 #bdone{display:none;}
+
+/* Mobile: stack panels below board */
+@media(max-width:600px){
+  #main{flex-direction:column;}
+  #panels{width:100%;height:auto;border-left:none;border-top:1px solid #222;flex-direction:row;overflow-x:auto;overflow-y:hidden;flex-shrink:0;}
+  .pp{border-bottom:none;border-right:1px solid #1e1e1e;min-width:200px;flex-shrink:0;}
+  #hint{display:none;}
+}
 </style>
 
 <div id="setup">
@@ -108,7 +129,7 @@ const fk=k=>{const[q,r]=k.split(',').map(Number);return{q,r};};
 const nbrs=(q,r)=>DIRS.map(([a,b])=>({q:q+a,r:r+b}));
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];}}
 
-// ── Geometry helpers ──────────────────────────────────────────────────────────
+// ── Tile rendering ─────────────────────────────────────────────────────────────
 function hCorner(cx,cy,i,sz){const a=Math.PI/180*(60*i+30);return{x:cx+sz*Math.cos(a),y:cy+sz*Math.sin(a)};}
 function eMid(cx,cy,e,sz){
   const c1=hCorner(cx,cy,e,sz),c2=hCorner(cx,cy,(e+1)%6,sz);
@@ -119,191 +140,78 @@ function hexPath(ct,cx,cy,sz){
   for(let i=0;i<6;i++){const c=hCorner(cx,cy,i,sz);i?ct.lineTo(c.x,c.y):ct.moveTo(c.x,c.y);}
   ct.closePath();
 }
-
-// Control point always pulled toward centre (concave inward)
 function ctrlPt(cx,cy,e1,e2,sz){
   const p1=eMid(cx,cy,e1,sz),p2=eMid(cx,cy,e2,sz);
   const diff=Math.abs(e1-e2),span=Math.min(diff,6-diff);
-  if(span===3) return{x:cx,y:cy,straight:true};
+  if(span===3) return{x:cx,y:cy,straight:true,p0:p1,p1:p2};
   const mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2;
-  const pull=span===1?0.5:0.38;
-  return{x:mx+pull*(cx-mx),y:my+pull*(cy-my),straight:false};
+  const pull=span===1?0.65:0.52;
+  return{x:mx+pull*(cx-mx),y:my+pull*(cy-my),straight:false,p0:p1,p1:p2};
 }
-
-// Evaluate quadratic bezier at t
 function qbez(p0,cp,p1,t){
-  const s=1-t;
-  return{x:s*s*p0.x+2*s*t*cp.x+t*t*p1.x, y:s*s*p0.y+2*s*t*cp.y+t*t*p1.y};
+  const s=1-t;return{x:s*s*p0.x+2*s*t*cp.x+t*t*p1.x,y:s*s*p0.y+2*s*t*cp.y+t*t*p1.y};
 }
-
-// Find intersection parameter t on curve B where it crosses curve A.
-// Returns t value on curveB, or null if no intersection found.
-// Uses sampling: find t on B where distance to any point on A is minimised,
-// and that distance is less than threshold (linewidth).
-function findCrossing(p0a,cpa,p1a,straightA, p0b,cpb,p1b,straightB, threshold){
-  const N=120;
-  // Sample curve A
-  const ptsA=[];
+function findCrossing(geomA,geomB,threshold){
+  const N=120,ptsA=[];
   for(let i=0;i<=N;i++){
     const t=i/N;
-    if(straightA){ptsA.push({x:p0a.x+(p1a.x-p0a.x)*t,y:p0a.y+(p1a.y-p0a.y)*t});}
-    else ptsA.push(qbez(p0a,cpa,p1a,t));
+    if(geomA.straight) ptsA.push({x:geomA.p0.x+(geomA.p1.x-geomA.p0.x)*t,y:geomA.p0.y+(geomA.p1.y-geomA.p0.y)*t});
+    else ptsA.push(qbez(geomA.p0,geomA,geomA.p1,t));
   }
-  // For each t on B, find min dist to A
   let bestDist=Infinity,bestT=0.5;
   for(let i=0;i<=N;i++){
-    const t=i/N;
-    let pb;
-    if(straightB) pb={x:p0b.x+(p1b.x-p0b.x)*t,y:p0b.y+(p1b.y-p0b.y)*t};
-    else pb=qbez(p0b,cpb,p1b,t);
+    const t=i/N;let pb;
+    if(geomB.straight) pb={x:geomB.p0.x+(geomB.p1.x-geomB.p0.x)*t,y:geomB.p0.y+(geomB.p1.y-geomB.p0.y)*t};
+    else pb=qbez(geomB.p0,geomB,geomB.p1,t);
     let minD=Infinity;
-    for(const pa of ptsA){
-      const d=Math.hypot(pb.x-pa.x,pb.y-pa.y);
-      if(d<minD) minD=d;
-    }
+    for(const pa of ptsA){const d=Math.hypot(pb.x-pa.x,pb.y-pa.y);if(d<minD)minD=d;}
     if(minD<bestDist){bestDist=minD;bestT=t;}
   }
-  // Only return if they actually cross (distance less than threshold)
-  return bestDist<threshold ? bestT : null;
+  return bestDist<threshold?bestT:null;
 }
-
-// Determine curve priority: higher = goes on top
-// Span 3 (straight) > span 2 > span 1. Tie-break by lower e1.
-function curvePriority(e1,e2){
-  const diff=Math.abs(e1-e2),span=Math.min(diff,6-diff);
-  return span*10 - e1; // higher span = higher priority
+function curvePriority(e1,e2){const diff=Math.abs(e1-e2),span=Math.min(diff,6-diff);return span*10-e1;}
+function drawBezWithGap(ct,geom,tGap,halfGap){
+  const{p0,p1,straight,x,y}=geom;
+  const t1=Math.max(0.01,tGap-halfGap),t2=Math.min(0.99,tGap+halfGap);
+  function ptAt(t){if(straight)return{x:p0.x+(p1.x-p0.x)*t,y:p0.y+(p1.y-p0.y)*t};return qbez(p0,geom,p1,t);}
+  if(t1>0.01){const ep=ptAt(t1);ct.beginPath();ct.moveTo(p0.x,p0.y);if(straight)ct.lineTo(ep.x,ep.y);else ct.quadraticCurveTo(p0.x+(x-p0.x)*t1,p0.y+(y-p0.y)*t1,ep.x,ep.y);ct.stroke();}
+  if(t2<0.99){const sp=ptAt(t2);ct.beginPath();ct.moveTo(sp.x,sp.y);if(straight)ct.lineTo(p1.x,p1.y);else ct.quadraticCurveTo(x+(p1.x-x)*t2,y+(p1.y-y)*t2,p1.x,p1.y);ct.stroke();}
 }
-
-// Draw a quadratic bezier curve with a gap around parameter tGap
-// Draws two segments: [0..tGap-halfGap] and [tGap+halfGap..1]
-function drawBezWithGap(ct,p0,cp,p1,straight,tGap,halfGap){
-  const t1=Math.max(0,tGap-halfGap);
-  const t2=Math.min(1,tGap+halfGap);
-  // Segment 1: t=0 to t=t1
-  if(t1>0.01){
-    const ep1=straight?{x:p0.x+(p1.x-p0.x)*t1,y:p0.y+(p1.y-p0.y)*t1}:qbez(p0,cp,p1,t1);
-    // For quadratic bezier sub-curve from 0 to t1: de Casteljau subdivision
-    if(straight){
-      ct.beginPath();ct.moveTo(p0.x,p0.y);ct.lineTo(ep1.x,ep1.y);ct.stroke();
-    } else {
-      const subCp={x:p0.x+(cp.x-p0.x)*t1,y:p0.y+(cp.y-p0.y)*t1};
-      ct.beginPath();ct.moveTo(p0.x,p0.y);ct.quadraticCurveTo(subCp.x,subCp.y,ep1.x,ep1.y);ct.stroke();
-    }
-  }
-  // Segment 2: t=t2 to t=1
-  if(t2<0.99){
-    const sp2=straight?{x:p0.x+(p1.x-p0.x)*t2,y:p0.y+(p1.y-p0.y)*t2}:qbez(p0,cp,p1,t2);
-    if(straight){
-      ct.beginPath();ct.moveTo(sp2.x,sp2.y);ct.lineTo(p1.x,p1.y);ct.stroke();
-    } else {
-      // Sub-curve from t2 to 1
-      const subCp={x:cp.x+(p1.x-cp.x)*t2,y:cp.y+(p1.y-cp.y)*t2};
-      // Actually need proper de Casteljau for sub-curve starting at t2
-      // Point at t2: already sp2
-      // Control point for [t2..1]: lerp(cp,p1,t2) ... actually:
-      // For sub-bezier from t to 1: start=B(t), cp_new = lerp(cp,p1,t), end=p1
-      ct.beginPath();ct.moveTo(sp2.x,sp2.y);ct.quadraticCurveTo(subCp.x,subCp.y,p1.x,p1.y);ct.stroke();
-    }
-  }
+function drawStrokeFull(ct,geom){
+  const{p0,p1,straight,x,y}=geom;
+  ct.beginPath();ct.moveTo(p0.x,p0.y);
+  if(straight)ct.lineTo(p1.x,p1.y);else ct.quadraticCurveTo(x,y,p1.x,p1.y);ct.stroke();
 }
-
-// ── Main tile drawing function ────────────────────────────────────────────────
 function drawHex(ct,cx,cy,tile,sz,alpha=1){
-  ct.save();
-  ct.globalAlpha=alpha;
-
-  hexPath(ct,cx,cy,sz);
-  ct.fillStyle='#0a0a0a';
-  ct.fill();
-
-  // Clip to hex
-  hexPath(ct,cx,cy,sz*0.995);
-  ct.clip();
-
-  const lw=sz*0.36;
-  const curves=tile.curves;
-
-  // Build geometry for each curve
-  const geom=curves.map(cv=>{
-    const p0=eMid(cx,cy,cv.e1,sz),p1=eMid(cx,cy,cv.e2,sz);
-    const cp=ctrlPt(cx,cy,cv.e1,cv.e2,sz);
-    const diff=Math.abs(cv.e1-cv.e2),span=Math.min(diff,6-diff);
-    return{cv,p0,cp,p1,straight:cp.straight,span,pri:curvePriority(cv.e1,cv.e2)};
-  });
-
-  // Sort: draw lowest priority (under) first, highest (over) last
-  const sorted=[...geom].sort((a,b)=>a.pri-b.pri);
-
-  // Find crossings between all pairs
-  // crossings[i] = list of t values where curve i (in sorted order) is crossed by a higher-priority curve
-  const crossings=sorted.map(()=>[]);
-  const halfGap=0.055; // gap half-width in t-space
-
-  for(let i=0;i<sorted.length;i++){
+  ct.save();ct.globalAlpha=alpha;
+  hexPath(ct,cx,cy,sz);ct.fillStyle='#0a0a0a';ct.fill();
+  hexPath(ct,cx,cy,sz);ct.clip();
+  const lw=sz*0.40;
+  const geoms=tile.curves.map(cv=>{const g=ctrlPt(cx,cy,cv.e1,cv.e2,sz);return{cv,g,pri:curvePriority(cv.e1,cv.e2)};});
+  const sorted=[...geoms].sort((a,b)=>a.pri-b.pri);
+  const crossings=sorted.map(()=>[]);const halfGap=0.055;
+  for(let i=0;i<sorted.length;i++)
     for(let j=i+1;j<sorted.length;j++){
-      const under=sorted[i],over=sorted[j];
-      // Find where the UNDER curve is crossed by the OVER curve
-      const tUnder=findCrossing(
-        over.p0,over.cp,over.p1,over.straight,
-        under.p0,under.cp,under.p1,under.straight,
-        lw*0.7
-      );
-      if(tUnder!==null){
-        crossings[i].push(tUnder);
-      }
+      const tU=findCrossing(sorted[j].g,sorted[i].g,lw*0.7);if(tU!==null)crossings[i].push(tU);
     }
-  }
-
-  // Draw curves in order (under to over)
+  ct.lineCap='square';
   for(let i=0;i<sorted.length;i++){
-    const {cv,p0,cp,p1,straight}=sorted[i];
-
-    // Black outline pass
-    ct.strokeStyle='#000';
-    ct.lineWidth=lw+sz*0.08;
-    ct.lineCap='butt';
-
-    if(crossings[i].length===0){
-      ct.beginPath();ct.moveTo(p0.x,p0.y);
-      if(straight) ct.lineTo(p1.x,p1.y);
-      else ct.quadraticCurveTo(cp.x,cp.y,p1.x,p1.y);
-      ct.stroke();
-    } else {
-      // Draw with gaps at each crossing (black outline also gapped so background shows through)
-      for(const tGap of crossings[i]){
-        drawBezWithGap(ct,p0,cp,p1,straight,tGap,halfGap);
-      }
-    }
-
-    // Colour pass
-    ct.strokeStyle=CLR[cv.c];
-    ct.lineWidth=lw;
-    ct.lineCap='butt';
-
-    if(crossings[i].length===0){
-      ct.beginPath();ct.moveTo(p0.x,p0.y);
-      if(straight) ct.lineTo(p1.x,p1.y);
-      else ct.quadraticCurveTo(cp.x,cp.y,p1.x,p1.y);
-      ct.stroke();
-    } else {
-      for(const tGap of crossings[i]){
-        drawBezWithGap(ct,p0,cp,p1,straight,tGap,halfGap);
-      }
-    }
+    const{cv,g}=sorted[i];const hasCross=crossings[i].length>0;
+    ct.strokeStyle='#000';ct.lineWidth=lw+sz*0.08;
+    if(!hasCross)drawStrokeFull(ct,g);else for(const tGap of crossings[i])drawBezWithGap(ct,g,tGap,halfGap);
+    ct.strokeStyle=CLR[cv.c];ct.lineWidth=lw;
+    if(!hasCross)drawStrokeFull(ct,g);else for(const tGap of crossings[i])drawBezWithGap(ct,g,tGap,halfGap);
   }
-
   ct.restore();
-
-  // Hex border
+  // Thick black border (over/under effect at tile edge)
   ct.save();ct.globalAlpha=alpha;
   hexPath(ct,cx,cy,sz);
-  ct.strokeStyle='rgba(255,255,255,0.07)';ct.lineWidth=1;ct.stroke();
+  ct.strokeStyle='#000';ct.lineWidth=sz*0.10;ct.lineJoin='round';ct.stroke();
   ct.restore();
 }
 
 // ── Setup ─────────────────────────────────────────────────────────────────────
-let setupPlayers=[{col:'R'},{col:'B'}];
-let numPlayers=2;
+let setupPlayers=[{col:'R'},{col:'B'}],numPlayers=2;
 function buildSetup(){
   const conf=document.getElementById('pconf');conf.innerHTML='';
   setupPlayers=setupPlayers.slice(0,numPlayers);
@@ -319,8 +227,7 @@ function buildSetup(){
     ALL_COLS.forEach(c=>{
       const btn=document.createElement('div');btn.className='co';btn.style.background=CLR[c];
       const usedByOther=setupPlayers.some((p,j)=>j!==i&&p.col===c);
-      if(usedByOther)btn.classList.add('used');
-      if(pl.col===c)btn.classList.add('active');
+      if(usedByOther)btn.classList.add('used');if(pl.col===c)btn.classList.add('active');
       btn.addEventListener('click',()=>{if(!usedByOther){setupPlayers[i].col=c;buildSetup();}});
       opts.appendChild(btn);
     });
@@ -345,12 +252,10 @@ document.getElementById('start-btn').addEventListener('click',()=>{
 const G={board:new Map(),bag:[],players:[],cur:0,phase:'idle',turnPhase:'free',sel:null,selP:-1,rot:0};
 function startGame(playerDefs){
   const bag=TILES.map(t=>({...t}));shuffle(bag);
-  G.bag=bag;G.board=new Map();
-  G.players=playerDefs.map(pd=>({col:pd.col,hand:[]}));
+  G.bag=bag;G.board=new Map();G.players=playerDefs.map(pd=>({col:pd.col,hand:[]}));
   G.phase='play';G.sel=null;G.selP=-1;G.rot=0;
   for(let p=0;p<G.players.length;p++)for(let i=0;i<6;i++)drawT(p);
-  G.cur=0|Math.random()*G.players.length;
-  startTurn();setTimeout(resizeBoard,50);
+  G.cur=0|Math.random()*G.players.length;startTurn();setTimeout(resizeBoard,50);
 }
 function drawT(p){if(G.bag.length)G.players[p].hand.push(G.bag.pop());}
 function rotateTile(t,n){const edges=rotateEdges(t.edges,n);return{...t,edges,curves:edgesToCurves(edges)};}
@@ -387,15 +292,13 @@ function checkRestrictions(q,r,tile){
   return null;
 }
 function canPlace(q,r,tile){
-  if(G.board.has(hk(q,r)))return false;
-  if(G.board.size===0)return true;
+  if(G.board.has(hk(q,r)))return false;if(G.board.size===0)return true;
   const ns=nbrs(q,r);let adj=false;
   for(let d=0;d<6;d++){const nk=hk(ns[d].q,ns[d].r);if(!G.board.has(nk))continue;adj=true;if(tile.edges[(d+3)%6]!==G.board.get(nk).edges[d])return false;}
   return adj&&checkRestrictions(q,r,tile)===null;
 }
 function canPlaceReason(q,r,tile){
-  if(G.board.has(hk(q,r)))return'Space occupied';
-  if(G.board.size===0)return null;
+  if(G.board.has(hk(q,r)))return'Space occupied';if(G.board.size===0)return null;
   const ns=nbrs(q,r);let adj=false;
   for(let d=0;d<6;d++){
     const nk=hk(ns[d].q,ns[d].r);if(!G.board.has(nk))continue;adj=true;
@@ -434,18 +337,15 @@ function updateUI(){
   document.getElementById('bag-count').textContent=G.bag.length;
 }
 function placeTile(q,r,rt,handIdx){
-  G.board.set(hk(q,r),rt);G.players[G.cur].hand.splice(handIdx,1);
-  G.sel=null;G.selP=-1;G.rot=0;drawT(G.cur);
+  G.board.set(hk(q,r),rt);G.players[G.cur].hand.splice(handIdx,1);G.sel=null;G.selP=-1;G.rot=0;drawT(G.cur);
 }
 function doClick(px,py){
   if(G.phase!=='play')return;
   if(G.sel===null||G.selP!==G.cur){setMsg('Select a tile from your hand first','bad');return;}
   const{q,r}=p2h(px,py);
   const rt=rotateTile(G.players[G.cur].hand[G.sel],G.rot);
-  const reason=canPlaceReason(q,r,rt);
-  if(reason){setMsg(reason,'bad');return;}
-  const forced=getForcedSpaces();
-  const isF=forced.some(f=>f.q===q&&f.r===r);
+  const reason=canPlaceReason(q,r,rt);if(reason){setMsg(reason,'bad');return;}
+  const forced=getForcedSpaces();const isF=forced.some(f=>f.q===q&&f.r===r);
   if((G.turnPhase==='forced1'||G.turnPhase==='forced2')&&!isF){setMsg('Must fill a forced space (orange) first','bad');return;}
   placeTile(q,r,rt,G.sel);
   if(G.turnPhase==='forced1'||G.turnPhase==='forced2'){
@@ -470,14 +370,12 @@ function longestChain(col){
   for(const[tk]of G.board){
     const tile=G.board.get(tk);
     for(let e=0;e<6;e++){
-      if(tile.edges[e]!==col)continue;
-      const sid=tk+':'+e;if(vis.has(sid))continue;
+      if(tile.edges[e]!==col)continue;const sid=tk+':'+e;if(vis.has(sid))continue;
       const seen=new Set([sid]),queue=[[tk,e]],inChain=new Set([tk]);
       while(queue.length){
         const[ctk,ine]=queue.shift();const ct=G.board.get(ctk);if(!ct)continue;
         for(let e2=0;e2<6;e2++){
-          if(e2===ine||ct.edges[e2]!==col)continue;
-          inChain.add(ctk);
+          if(e2===ine||ct.edges[e2]!==col)continue;inChain.add(ctk);
           const d=(e2+3)%6,{q,r}=fk(ctk),{q:nq,r:nr}=nbrs(q,r)[d];
           const ntk=hk(nq,nr),nid=ntk+':'+d;
           if(G.board.has(ntk)&&!seen.has(nid)){seen.add(nid);inChain.add(ntk);queue.push([ntk,d]);}
@@ -493,7 +391,8 @@ function longestChain(col){
 const canvas=document.getElementById('bc');
 const ctx=canvas.getContext('2d');
 let bw=0,bh=0,ox=0,oy=0,hov=null;
-const HS=40;
+const HS=42;
+
 function resizeBoard(){
   const a=document.getElementById('ba');bw=a.clientWidth;bh=a.clientHeight;
   canvas.width=bw;canvas.height=bh;ox=bw/2;oy=bh/2;drawBoard();
@@ -505,35 +404,50 @@ function rndH(q,r){
   const dq=Math.abs(rq-q),dr=Math.abs(rr-r),ds=Math.abs(rs-s);
   if(dq>dr&&dq>ds)rq=-rr-rs;else if(dr>ds)rr=-rq-rs;return{q:rq,r:rr};
 }
+
+function drawEmptyHex(cx,cy,isForced){
+  ctx.save();
+  hexPath(ctx,cx,cy,HS);
+  ctx.fillStyle=isForced?'#2a1800':'#333';
+  ctx.fill();
+  // White border for dark-grey empty slots
+  ctx.strokeStyle=isForced?'rgba(220,150,0,0.9)':'rgba(255,255,255,0.55)';
+  ctx.lineWidth=isForced?2:1.5;
+  if(isForced){ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);}
+  else ctx.stroke();
+  ctx.restore();
+}
+
 function drawBoard(){
-  ctx.clearRect(0,0,bw,bh);ctx.fillStyle='#111';ctx.fillRect(0,0,bw,bh);
+  // Light grey background
+  ctx.fillStyle='#888';ctx.fillRect(0,0,bw,bh);
+
   const forced=G.phase==='play'?getForcedSpaces():[];
-  for(const{q,r}of forced){
+  const placeable=slots();
+
+  // Dark grey empty slots with white borders
+  for(const{q,r}of placeable){
     const{x,y}=h2p(q,r);
-    ctx.save();hexPath(ctx,x,y,HS);ctx.fillStyle='rgba(150,80,0,0.25)';ctx.fill();
-    ctx.strokeStyle='rgba(200,130,0,0.8)';ctx.lineWidth=2;ctx.setLineDash([4,3]);ctx.stroke();
-    ctx.setLineDash([]);ctx.restore();
+    if(x<-HS*2||x>bw+HS*2||y<-HS*2||y>bh+HS*2)continue;
+    drawEmptyHex(x,y,forced.some(f=>f.q===q&&f.r===r));
   }
+
+  // Placed tiles
   for(const[k,t]of G.board){
     const{q,r}=fk(k);const{x,y}=h2p(q,r);
     if(x<-HS*2||x>bw+HS*2||y<-HS*2||y>bh+HS*2)continue;
     drawHex(ctx,x,y,t,HS);
   }
-  if(G.phase==='play'){
-    for(const{q,r}of slots()){
-      if(forced.some(f=>f.q===q&&f.r===r))continue;
-      const{x,y}=h2p(q,r);
-      if(x<-HS*2||x>bw+HS*2||y<-HS*2||y>bh+HS*2)continue;
-      ctx.save();hexPath(ctx,x,y,HS);ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;ctx.stroke();ctx.restore();
-    }
-    if(hov&&G.sel!==null&&G.selP===G.cur&&G.sel<G.players[G.cur].hand.length){
-      const{q,r}=hov;const{x,y}=h2p(q,r);
-      const rt=rotateTile(G.players[G.cur].hand[G.sel],G.rot);
-      const ok=canPlace(q,r,rt),isF=forced.some(f=>f.q===q&&f.r===r);
-      drawHex(ctx,x,y,rt,HS,ok&&(G.turnPhase==='free'||isF)?0.85:0.18);
-    }
+
+  // Hover preview
+  if(G.phase==='play'&&hov&&G.sel!==null&&G.selP===G.cur&&G.sel<G.players[G.cur].hand.length){
+    const{q,r}=hov;const{x,y}=h2p(q,r);
+    const rt=rotateTile(G.players[G.cur].hand[G.sel],G.rot);
+    const ok=canPlace(q,r,rt),isF=forced.some(f=>f.q===q&&f.r===r);
+    drawHex(ctx,x,y,rt,HS,ok&&(G.turnPhase==='free'||isF)?0.88:0.2);
   }
 }
+
 let drag=false,ds=null,doff=null;
 canvas.addEventListener('mousemove',e=>{
   const r=canvas.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;
@@ -548,12 +462,25 @@ canvas.addEventListener('mousedown',e=>{
   document.addEventListener('mousemove',mm);document.addEventListener('mouseup',mu);
 });
 canvas.addEventListener('mouseleave',()=>{hov=null;drawBoard();});
+
+// Touch support for mobile
+canvas.addEventListener('touchstart',e=>{e.preventDefault();const t=e.touches[0];const r=canvas.getBoundingClientRect();ds={x:t.clientX-r.left,y:t.clientY-r.top};doff={x:ox,y:oy};drag=false;},{passive:false});
+canvas.addEventListener('touchmove',e=>{e.preventDefault();const t=e.touches[0];const r=canvas.getBoundingClientRect();const px=t.clientX-r.left,py=t.clientY-r.top;if(Math.abs(px-ds.x)+Math.abs(py-ds.y)>8){drag=true;ox=doff.x+(px-ds.x);oy=doff.y+(py-ds.y);drawBoard();}},{passive:false});
+canvas.addEventListener('touchend',e=>{e.preventDefault();if(!drag){const t=e.changedTouches[0];const r=canvas.getBoundingClientRect();doClick(t.clientX-r.left,t.clientY-r.top);}drag=false;},{passive:false});
+
 function setMsg(t,c){const el=document.getElementById('msg');el.textContent=t;el.className=c||'info';}
+
 function render(){renderPanels();updateUI();drawBoard();}
+
 function renderPanels(){
   if(G.phase==='idle')return;
   const cont=document.getElementById('panels');cont.innerHTML='';
   const forced=getForcedSpaces();
+  const isMobile=window.innerWidth<=600;
+  // Tile canvas size: bigger on desktop
+  const tSz=isMobile?58:70;
+  const hexSz=isMobile?22:26;
+
   G.players.forEach((pl,p)=>{
     const isAct=p===G.cur;
     const pp=document.createElement('div');pp.className='pp'+(isAct?' act':'');
@@ -570,11 +497,13 @@ function renderPanels(){
       const isSel=G.sel===i&&G.selP===p&&isAct;
       const w=document.createElement('div');
       w.className='hw'+(isSel?' sel':'')+(fits?' forced':'')+(isAct?'':' inact');
-      const c=document.createElement('canvas');c.width=54;c.height=56;
+      const c=document.createElement('canvas');
+      c.width=tSz;c.height=Math.round(tSz*1.04);
       const ct=c.getContext('2d');
-      drawHex(ct,27,28,isAct&&isSel?rotateTile(tile,G.rot):tile,20);
-      ct.fillStyle='rgba(255,255,255,0.16)';ct.font='bold 6px sans-serif';
-      ct.textAlign='center';ct.textBaseline='middle';ct.fillText(tile.n,27,28);
+      const cx=tSz/2,cy=c.height/2;
+      drawHex(ct,cx,cy,isAct&&isSel?rotateTile(tile,G.rot):tile,hexSz);
+      ct.fillStyle='rgba(255,255,255,0.18)';ct.font=`bold ${hexSz*0.3}px sans-serif`;
+      ct.textAlign='center';ct.textBaseline='middle';ct.fillText(tile.n,cx,cy);
       w.appendChild(c);
       if(fits){const b=document.createElement('span');b.className='badge';b.textContent='!';w.appendChild(b);}
       if(isAct)w.addEventListener('click',()=>{if(G.sel===i&&G.selP===p)G.rot=(G.rot+1)%6;else{G.sel=i;G.selP=p;G.rot=0;}render();});
@@ -583,6 +512,7 @@ function renderPanels(){
     pp.append(hdr,grid);cont.appendChild(pp);
   });
 }
+
 document.getElementById('bn').addEventListener('click',()=>{
   document.getElementById('game').style.display='none';
   document.getElementById('setup').style.display='flex';buildSetup();
@@ -594,5 +524,5 @@ document.getElementById('bdone').addEventListener('click',()=>{
 document.addEventListener('keydown',e=>{
   if((e.key==='r'||e.key==='R')&&G.sel!==null&&G.selP===G.cur){G.rot=(G.rot+1)%6;render();}
 });
-window.addEventListener('resize',resizeBoard);
+window.addEventListener('resize',()=>{resizeBoard();render();});
 </script>
