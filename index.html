@@ -86,7 +86,9 @@ body{font-family:system-ui,sans-serif;}
     <button class="cnt-btn" data-n="4">4</button>
   </div>
   <div id="pconf"></div>
-  <button id="start-btn">Start Game</button>
+ <button id="create-room">Create Room</button>
+<button id="join-room">Join Room</button>
+<button id="start-btn">Start Game</button>
 </div>
 
 <div id="game">
@@ -103,7 +105,13 @@ body{font-family:system-ui,sans-serif;}
   </div>
 </div>
 
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
 <script>
+
+const socket = io('http://localhost:3000');
+let ROOM_CODE = null;
+
 const EDGE_STRINGS=[
 'GGRRYY','GGYYRR','GGYRRY','RRGYYG','GGRYYR','YGRYRG','GRYGYR','RGYRYG',
 'YYRGRG','YYGRGR','GGRYRY','GGYRYR','RRGYGY','RRYGYG','BBYYGG','BBGGYY',
@@ -241,11 +249,85 @@ document.querySelectorAll('.cnt-btn').forEach(b=>{
   });
 });
 buildSetup();
+
+// CREATE ROOM
+
+document.getElementById('create-room').addEventListener('click', () => {
+
+  socket.emit('createRoom');
+
+});
+
+socket.on('roomCreated', roomCode => {
+
+  ROOM_CODE = roomCode;
+
+  alert('Room code: ' + roomCode);
+
+});
+
+// JOIN ROOM
+
+document.getElementById('join-room').addEventListener('click', () => {
+
+  const code = prompt('Enter room code');
+
+  if (!code) return;
+
+  ROOM_CODE = code.toUpperCase();
+
+  socket.emit('joinRoom', ROOM_CODE);
+
+});
+
+socket.on('joinedRoom', roomCode => {
+
+  ROOM_CODE = roomCode;
+
+  alert('Joined room: ' + roomCode);
+
+});
+
+socket.on('errorMessage', msg => {
+
+  alert(msg);
+
+});
+
+// START GAME
+
 document.getElementById('start-btn').addEventListener('click',()=>{
-  if(setupPlayers.some(p=>!p.col)){alert('Each player needs a colour.');return;}
+
+  if(!ROOM_CODE){
+    alert('Create or join a room first');
+    return;
+  }
+
+  if(setupPlayers.some(p=>!p.col)){
+    alert('Each player needs a colour.');
+    return;
+  }
+
   document.getElementById('setup').style.display='none';
   document.getElementById('game').style.display='flex';
+
   startGame(setupPlayers.map(p=>({...p})));
+
+  socket.emit('hostGameState', {
+
+    roomCode: ROOM_CODE,
+
+    gameState: {
+      board: Array.from(G.board.entries()),
+      bag: G.bag,
+      players: G.players,
+      cur: G.cur,
+      phase: G.phase,
+      turnPhase: G.turnPhase
+    }
+
+  });
+
 });
 
 // ── Game ──────────────────────────────────────────────────────────────────────
@@ -337,8 +419,29 @@ function updateUI(){
   document.getElementById('bag-count').textContent=G.bag.length;
 }
 function placeTile(q,r,rt,handIdx){
-  G.board.set(hk(q,r),rt);G.players[G.cur].hand.splice(handIdx,1);G.sel=null;G.selP=-1;G.rot=0;drawT(G.cur);
+
+  G.board.set(hk(q,r),rt);
+
+  G.players[G.cur].hand.splice(handIdx,1);
+
+  socket.emit('updateGame', {
+
+    roomCode: ROOM_CODE,
+
+    gameState: {
+      board: Array.from(G.board.entries()),
+      bag: G.bag,
+      players: G.players,
+      cur: G.cur,
+      phase: G.phase,
+      turnPhase: G.turnPhase
+    }
+
+  });
+
+  G.sel = null;
 }
+
 function doClick(px,py){
   if(G.phase!=='play')return;
   if(G.sel===null||G.selP!==G.cur){setMsg('Select a tile from your hand first','bad');return;}
@@ -515,14 +618,50 @@ function renderPanels(){
 
 document.getElementById('bn').addEventListener('click',()=>{
   document.getElementById('game').style.display='none';
-  document.getElementById('setup').style.display='flex';buildSetup();
+  document.getElementById('setup').style.display='flex';
+  buildSetup();
 });
+
 document.getElementById('bdone').addEventListener('click',()=>{
-  if(G.turnPhase==='forced1'){G.turnPhase='free';setMsg(`P${G.cur+1}: make your free move`,'info');updateUI();render();}
-  else if(G.turnPhase==='forced2')endTurn();
+  if(G.turnPhase==='forced1'){
+    G.turnPhase='free';
+    setMsg(`P${G.cur+1}: make your free move`,'info');
+    updateUI();
+    render();
+  }
+  else if(G.turnPhase==='forced2'){
+    endTurn();
+  }
 });
+
 document.addEventListener('keydown',e=>{
-  if((e.key==='r'||e.key==='R')&&G.sel!==null&&G.selP===G.cur){G.rot=(G.rot+1)%6;render();}
+  if((e.key==='r'||e.key==='R')&&G.sel!==null&&G.selP===G.cur){
+    G.rot=(G.rot+1)%6;
+    render();
+  }
 });
-window.addEventListener('resize',()=>{resizeBoard();render();});
+
+window.addEventListener('resize',()=>{
+  resizeBoard();
+  render();
+});
+
+
+// MULTIPLAYER UPDATES
+socket.on('gameUpdated', gameState => {
+
+  G.board = new Map(gameState.board);
+  G.bag = gameState.bag;
+  G.players = gameState.players;
+  G.cur = gameState.cur;
+  G.phase = gameState.phase;
+  G.turnPhase = gameState.turnPhase;
+
+  render();
+
+});
+
+// REQUEST CURRENT GAME
+socket.emit('requestGameState');
+
 </script>
