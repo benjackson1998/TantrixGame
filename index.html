@@ -1,4 +1,5 @@
 
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:system-ui,sans-serif;}
@@ -70,9 +71,12 @@ body{font-family:system-ui,sans-serif;}
 /* Mobile: stack panels below board */
 @media(max-width:600px){
   #main{flex-direction:column;}
-  #panels{width:100%;height:auto;border-left:none;border-top:1px solid #222;flex-direction:row;overflow-x:auto;overflow-y:hidden;flex-shrink:0;}
-  .pp{border-bottom:none;border-right:1px solid #1e1e1e;min-width:200px;flex-shrink:0;}
+  #panels{width:100%;height:160px;border-left:none;border-top:1px solid #222;flex-direction:row;overflow-x:auto;overflow-y:hidden;flex-shrink:0;}
+  .pp{border-bottom:none;border-right:1px solid #1e1e1e;min-width:180px;flex-shrink:0;padding:6px 8px;}
+  .pp-hdr{margin-bottom:4px;}
+  .hgrid{gap:3px;}
   #hint{display:none;}
+  #bbar button{font-size:13px;padding:8px 10px;}
 }
 </style>
 <style>
@@ -126,6 +130,7 @@ body{font-family:system-ui,sans-serif;}
     <button id="btn-start-online">Start Game →</button>
   </div>
   <div id="lobby-msg"></div>
+  <a href="https://www.tantrix.com/english/TantrixGameRules.html" target="_blank" rel="noopener" style="font-size:12px;color:#555;text-decoration:none;margin-top:4px;">📖 How to play — Official Tantrix Rules</a>
 </div>
 
 <div id="setup">
@@ -142,7 +147,7 @@ body{font-family:system-ui,sans-serif;}
 </div>
 
 <div id="game">
-  <div id="hdr"><h2>⬡ TANTRIX</h2><span id="hint">Select tile · R=rotate · click board · drag=pan</span></div>
+  <div id="hdr"><h2>⬡ TANTRIX</h2><span id="hint">Select tile · R=rotate · click board · drag=pan</span><a href="https://www.tantrix.com/english/TantrixGameRules.html" target="_blank" rel="noopener" style="font-size:11px;color:#555;text-decoration:none;margin-left:10px;white-space:nowrap;">📖 Rules</a></div>
   <div id="sbar"><span id="msg" class="info">…</span><span id="phase-ind" class="pi"></span></div>
   <div id="main">
     <div id="ba"><canvas id="bc"></canvas></div>
@@ -474,11 +479,21 @@ function longestChain(col){return bestScore(col).score;}
 const canvas=document.getElementById('bc');
 const ctx=canvas.getContext('2d');
 let bw=0,bh=0,ox=0,oy=0,hov=null;
-const HS=42;
+let HS=42; // recalculated in resizeBoard
 
 function resizeBoard(){
   const a=document.getElementById('ba');bw=a.clientWidth;bh=a.clientHeight;
-  canvas.width=bw;canvas.height=bh;ox=bw/2;oy=bh/2;drawBoard();
+  canvas.width=bw;canvas.height=bh;
+  // Compute hex size: larger on mobile so the board feels zoomed in
+  const mobile=window.innerWidth<=600;
+  if(mobile){
+    // Target ~4 hexes across the board width (feels nicely zoomed)
+    HS=Math.round(bw/6.5);
+    HS=Math.max(44,Math.min(72,HS)); // clamp 44–72
+  } else {
+    HS=42;
+  }
+  ox=bw/2;oy=bh/2;drawBoard();
 }
 function h2p(q,r){return{x:ox+HS*Math.sqrt(3)*(q+r/2),y:oy+HS*1.5*r};}
 function p2h(px,py){const x=(px-ox)/HS,y=(py-oy)/HS;return rndH(x*Math.sqrt(3)/3-y/3,y*2/3);}
@@ -560,7 +575,39 @@ canvas.addEventListener('mouseleave',()=>{hov=null;drawBoard();});
 // Touch support for mobile
 canvas.addEventListener('touchstart',e=>{e.preventDefault();const t=e.touches[0];const r=canvas.getBoundingClientRect();ds={x:t.clientX-r.left,y:t.clientY-r.top};doff={x:ox,y:oy};drag=false;},{passive:false});
 canvas.addEventListener('touchmove',e=>{e.preventDefault();const t=e.touches[0];const r=canvas.getBoundingClientRect();const px=t.clientX-r.left,py=t.clientY-r.top;if(Math.abs(px-ds.x)+Math.abs(py-ds.y)>8){drag=true;ox=doff.x+(px-ds.x);oy=doff.y+(py-ds.y);drawBoard();}},{passive:false});
-canvas.addEventListener('touchend',e=>{e.preventDefault();if(!drag){const t=e.changedTouches[0];const r=canvas.getBoundingClientRect();doClick(t.clientX-r.left,t.clientY-r.top);}drag=false;},{passive:false});
+canvas.addEventListener('touchend',e=>{e.preventDefault();if(!drag){const t=e.changedTouches[0];const r=canvas.getBoundingClientRect();doClick(t.clientX-r.left,t.clientY-r.top);}drag=false;pinchDist=null;},{passive:false});
+
+// Pinch-to-zoom
+let pinchDist=null;
+canvas.addEventListener('touchstart',e=>{
+  if(e.touches.length===2){
+    const dx=e.touches[0].clientX-e.touches[1].clientX;
+    const dy=e.touches[0].clientY-e.touches[1].clientY;
+    pinchDist=Math.sqrt(dx*dx+dy*dy);
+    drag=true; // prevent click on touchend
+    e.preventDefault();
+  }
+},{passive:false});
+canvas.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinchDist!==null){
+    e.preventDefault();
+    const dx=e.touches[0].clientX-e.touches[1].clientX;
+    const dy=e.touches[0].clientY-e.touches[1].clientY;
+    const newDist=Math.sqrt(dx*dx+dy*dy);
+    const scale=newDist/pinchDist;
+    pinchDist=newDist;
+    // Zoom toward centre of pinch
+    const cx=(e.touches[0].clientX+e.touches[1].clientX)/2;
+    const cy=(e.touches[0].clientY+e.touches[1].clientY)/2;
+    const r=canvas.getBoundingClientRect();
+    const px=cx-r.left, py=cy-r.top;
+    // Adjust origin so the point under the pinch stays fixed
+    ox=px+(ox-px)*scale;
+    oy=py+(oy-py)*scale;
+    HS=Math.max(20,Math.min(120,HS*scale));
+    drawBoard();
+  }
+},{passive:false});
 
 function setMsg(t,c){const el=document.getElementById('msg');el.textContent=t;el.className=c||'info';}
 
@@ -572,8 +619,8 @@ function renderPanels(){
   const forced=getForcedSpaces();
   const isMobile=window.innerWidth<=600;
   // Tile canvas size: bigger on desktop
-  const tSz=isMobile?58:70;
-  const hexSz=isMobile?22:26;
+  const tSz=isMobile?52:70;
+  const hexSz=isMobile?20:26;
 
   G.players.forEach((pl,p)=>{
     const isAct=p===G.cur;
