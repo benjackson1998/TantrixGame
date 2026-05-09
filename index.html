@@ -408,7 +408,7 @@ function updateUI(){
 function placeTile(q,r,rt,handIdx){
   G.board.set(hk(q,r),rt);G.players[G.cur].hand.splice(handIdx,1);G.sel=null;G.selP=-1;G.rot=0;drawT(G.cur);
 }
-function doClick(px,py){
+function _doClickCore(px,py){
   if(G.phase!=='play')return;
   if(G.sel===null||G.selP!==G.cur){setMsg('Select a tile from your hand first','bad');return;}
   const{q,r}=p2h(px,py);
@@ -772,15 +772,14 @@ function emitState(){
   MP.socket.emit('updateGame',{roomCode:MP.roomCode,gameState:serialiseG()});
 }
 
-// ── Patch doClick to block non-current player and emit on success ────────
-const _origDoClick=doClick;
+// ── doClick: wraps core with MP guard ────────────────────────────────────
 function doClick(px,py){
   if(MP.enabled&&MP.myIndex!==G.cur){
     setMsg(`Waiting for P${G.cur+1} (${CN[G.players[G.cur].col]})…`,'info');return;
   }
   const sizeBefore=G.board.size;
-  _origDoClick(px,py);
-  if(G.board.size!==sizeBefore)emitState();
+  _doClickCore(px,py);
+  if(MP.enabled&&G.board.size!==sizeBefore)emitState();
 }
 
 // Emit after "→ Continue" (forced space / end turn button)
