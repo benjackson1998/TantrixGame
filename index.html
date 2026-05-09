@@ -75,6 +75,57 @@ body{font-family:system-ui,sans-serif;}
   #hint{display:none;}
 }
 </style>
+<style>
+#lobby{display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;padding:24px;}
+#lobby h2{font-size:24px;color:#eee;font-weight:700;letter-spacing:.05em;}
+.mode-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;}
+.mode-btn{padding:14px 28px;border-radius:8px;border:2px solid #444;background:#1a1a1a;color:#ccc;font-size:15px;font-weight:600;cursor:pointer;text-align:center;min-width:140px;}
+.mode-btn:hover{border-color:#3db87a;color:#3db87a;}
+#online-panel{display:none;flex-direction:column;gap:10px;width:100%;max-width:300px;}
+#online-panel input{padding:10px;border-radius:6px;border:1px solid #444;background:#1a1a1a;color:#eee;font-size:14px;text-align:center;}
+#online-panel input::placeholder{color:#555;}
+.online-btns{display:flex;gap:8px;}
+.online-btns button{flex:1;padding:10px;border-radius:6px;border:1px solid #444;background:#252525;color:#bbb;font-size:13px;font-weight:600;cursor:pointer;}
+.online-btns button:hover{background:#333;color:#fff;}
+#btn-create-room{background:#1a3d28!important;border-color:#2a6040!important;color:#3db87a!important;}
+#waiting-panel{display:none;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:320px;}
+#room-code-display{font-size:34px;font-weight:900;color:#3db87a;letter-spacing:.18em;background:#0a1a0f;padding:10px 24px;border-radius:8px;border:1px solid #2a6040;}
+#waiting-players{width:100%;background:#1a1a1a;border-radius:8px;border:1px solid #333;padding:8px 12px;}
+.wp-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #222;font-size:13px;color:#bbb;}
+.wp-row:last-child{border-bottom:none;}
+.wp-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+#btn-start-online{display:none;padding:10px 24px;border-radius:6px;border:1px solid #2a6040;background:#1a3d28;color:#3db87a;font-size:14px;font-weight:600;cursor:pointer;}
+#lobby-msg{font-size:12px;color:#cc8833;min-height:16px;}
+</style>
+<script src="/socket.io/socket.io.js"></script>
+
+<div id="lobby">
+  <h2>⬡ TANTRIX</h2>
+  <div class="mode-btns">
+    <div class="mode-btn" id="btn-local">🖥 Local Game<br><small style="font-weight:400;font-size:11px;color:#777">Same device</small></div>
+    <div class="mode-btn" id="btn-online">🌐 Online Game<br><small style="font-weight:400;font-size:11px;color:#777">Play over network</small></div>
+  </div>
+  <div id="online-panel">
+    <div><label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Your name</label>
+    <input id="inp-name" placeholder="Enter your name" maxlength="16"/></div>
+    <div><label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Your colour</label>
+    <div style="display:flex;gap:8px;justify-content:center;" id="lobby-color-opts"></div></div>
+    <div class="online-btns">
+      <button id="btn-create-room">Create Room</button>
+      <button id="btn-join-room">Join Room</button>
+    </div>
+    <input id="inp-room-code" placeholder="ROOM CODE" maxlength="4" style="display:none;text-transform:uppercase;letter-spacing:.15em;"/>
+    <button id="btn-confirm-join" style="display:none;padding:10px;border-radius:6px;border:1px solid #2a6040;background:#1a3d28;color:#3db87a;font-size:13px;font-weight:600;cursor:pointer;">Join →</button>
+  </div>
+  <div id="waiting-panel">
+    <div style="font-size:13px;color:#888;">Share this code with friends:</div>
+    <div id="room-code-display">----</div>
+    <div id="waiting-players"></div>
+    <div style="font-size:12px;color:#666;text-align:center;">Waiting for players to join…</div>
+    <button id="btn-start-online">Start Game →</button>
+  </div>
+  <div id="lobby-msg"></div>
+</div>
 
 <div id="setup">
   <h2>⬡ TANTRIX</h2>
@@ -99,6 +150,7 @@ body{font-family:system-ui,sans-serif;}
   <div id="bbar">
     <button class="bpri" id="bn">↩ New Game</button>
     <button id="bdone">→ Continue</button>
+    <button id="brot">↻ Rotate</button>
     <div id="bag-disp">Bag: <span id="bag-count">—</span></div>
   </div>
 </div>
@@ -267,38 +319,15 @@ function getForcedSpaces(){
   return[...cands].map(fk).filter(({q,r})=>isForced(q,r));
 }
 function bagEmpty(){return G.bag.length===0;}
-
-// Returns set of hk strings that are "controlled sides":
-// empty hexes adjacent to a forced space (that are not themselves forced).
-// These cannot be filled until the adjacent forced space is filled.
-function getControlledSides(){
-  if(bagEmpty()) return new Set();
-  const forced=getForcedSpaces();
-  const forcedSet=new Set(forced.map(({q,r})=>hk(q,r)));
-  const controlled=new Set();
-  for(const{q:fq,r:fr}of forced){
-    for(const{q:nq,r:nr}of nbrs(fq,fr)){
-      const k=hk(nq,nr);
-      if(!G.board.has(k)&&!forcedSet.has(k)) controlled.add(k);
-    }
-  }
-  return controlled;
-}
 function checkRestrictions(q,r,tile){
   if(bagEmpty())return null;
   for(const{q:nq,r:nr}of nbrs(q,r)){
     if(G.board.has(hk(nq,nr)))continue;
     if(occCount(nq,nr,q,r)>=4)return'Would create a 4-sided space';
   }
-  // Rule 3: controlled sides.
-  // A "controlled side" is any empty hex adjacent to a forced space.
-  // You may not place there unless you ARE filling the forced space.
-  // (q,r) is allowed if it IS itself a forced space (you're filling it).
   if(!isForced(q,r)){
-    for(const{q:nq,r:nr}of nbrs(q,r)){
-      if(!G.board.has(hk(nq,nr))&&isForced(nq,nr))
-        return'Cannot place here — it is a controlled side of a forced space (fill the forced space first)';
-    }
+    for(const{q:nq,r:nr}of nbrs(q,r))
+      if(!G.board.has(hk(nq,nr))&&isForced(nq,nr))return'Cannot place next to a forced space — fill it first';
   }
   for(const{q:nq,r:nr}of nbrs(q,r)){
     if(G.board.has(hk(nq,nr)))continue;
@@ -318,10 +347,7 @@ function canPlace(q,r,tile){
   if(G.board.has(hk(q,r)))return false;if(G.board.size===0)return true;
   const ns=nbrs(q,r);let adj=false;
   for(let d=0;d<6;d++){const nk=hk(ns[d].q,ns[d].r);if(!G.board.has(nk))continue;adj=true;if(tile.edges[(d+3)%6]!==G.board.get(nk).edges[d])return false;}
-  if(!adj)return false;
-  // Explicit controlled-side check: if this hex is a controlled side, block it
-  if(!bagEmpty()&&!isForced(q,r)&&getControlledSides().has(hk(q,r)))return false;
-  return checkRestrictions(q,r,tile)===null;
+  return adj&&checkRestrictions(q,r,tile)===null;
 }
 function canPlaceReason(q,r,tile){
   if(G.board.has(hk(q,r)))return'Space occupied';if(G.board.size===0)return null;
@@ -387,31 +413,45 @@ function doClick(px,py){
 function endTurn(){G.cur=(G.cur+1)%G.players.length;startTurn();}
 function endGame(){
   G.phase='end';
-  const sc=G.players.map((p,i)=>({i,col:p.col,s:longestChain(p.col)})).sort((a,b)=>b.s-a.s);
-  setMsg(`Game over! P${sc[0].i+1} (${CN[sc[0].col]}) wins — ${sc[0].s} tiles!`,'good');
+  const sc=G.players.map((p,i)=>{const bs=bestScore(p.col);return{i,col:p.col,bs};}).sort((a,b)=>b.bs.score-a.bs.score);
+  const w=sc[0],bs=w.bs;
+  const detail=bs.loop>0?`loop of ${bs.loop} tiles ×2 = ${bs.score}pts`:`line of ${bs.line} tiles = ${bs.score}pts`;
+  setMsg(`Game over! P${w.i+1} (${CN[w.col]}) wins — ${detail}!`,'good');
   document.getElementById('phase-ind').textContent='';document.getElementById('bdone').style.display='none';render();
 }
-function longestChain(col){
-  let best=0;const vis=new Set();
+// Returns {score,line,loop}. Loop tiles count double.
+function bestScore(col){
+  let bestLine=0,bestLoop=0;
+  const vis=new Set();
   for(const[tk]of G.board){
     const tile=G.board.get(tk);
     for(let e=0;e<6;e++){
-      if(tile.edges[e]!==col)continue;const sid=tk+':'+e;if(vis.has(sid))continue;
+      if(tile.edges[e]!==col)continue;
+      const sid=tk+':'+e;if(vis.has(sid))continue;
       const seen=new Set([sid]),queue=[[tk,e]],inChain=new Set([tk]);
+      let isLoop=false;
       while(queue.length){
         const[ctk,ine]=queue.shift();const ct=G.board.get(ctk);if(!ct)continue;
         for(let e2=0;e2<6;e2++){
-          if(e2===ine||ct.edges[e2]!==col)continue;inChain.add(ctk);
+          if(e2===ine||ct.edges[e2]!==col)continue;
+          inChain.add(ctk);
           const d=(e2+3)%6,{q,r}=fk(ctk),{q:nq,r:nr}=nbrs(q,r)[d];
           const ntk=hk(nq,nr),nid=ntk+':'+d;
-          if(G.board.has(ntk)&&!seen.has(nid)){seen.add(nid);inChain.add(ntk);queue.push([ntk,d]);}
+          if(G.board.has(ntk)){
+            if(seen.has(nid))isLoop=true;
+            else{seen.add(nid);inChain.add(ntk);queue.push([ntk,d]);}
+          }
         }
       }
-      best=Math.max(best,inChain.size);for(const s of seen)vis.add(s);
+      const len=inChain.size;
+      if(isLoop)bestLoop=Math.max(bestLoop,len);
+      else bestLine=Math.max(bestLine,len);
+      for(const s of seen)vis.add(s);
     }
   }
-  return best;
+  return{score:Math.max(bestLine,bestLoop*2),line:bestLine,loop:bestLoop};
 }
+function longestChain(col){return bestScore(col).score;}
 
 // ── Canvas ────────────────────────────────────────────────────────────────────
 const canvas=document.getElementById('bc');
@@ -431,26 +471,16 @@ function rndH(q,r){
   if(dq>dr&&dq>ds)rq=-rr-rs;else if(dr>ds)rr=-rq-rs;return{q:rq,r:rr};
 }
 
-function drawEmptyHex(cx,cy,state){
-  // state: 'normal' | 'forced' | 'controlled'
+function drawEmptyHex(cx,cy,isForced){
   ctx.save();
   hexPath(ctx,cx,cy,HS);
-  ctx.fillStyle=state==='forced'?'#2a1800':state==='controlled'?'#1a1a2a':'#333';
+  ctx.fillStyle=isForced?'#2a1800':'#333';
   ctx.fill();
-  if(state==='forced'){
-    ctx.strokeStyle='rgba(220,150,0,0.9)';ctx.lineWidth=2;
-    ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);
-  } else if(state==='controlled'){
-    // Subtle grey-blue tint with dimmed white border — "greyed out" per rulebook
-    ctx.strokeStyle='rgba(255,255,255,0.22)';ctx.lineWidth=1.5;ctx.stroke();
-    // Draw a small lock icon via X mark to signal "blocked"
-    ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;
-    const s=HS*0.18;
-    ctx.beginPath();ctx.moveTo(cx-s,cy-s);ctx.lineTo(cx+s,cy+s);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(cx+s,cy-s);ctx.lineTo(cx-s,cy+s);ctx.stroke();
-  } else {
-    ctx.strokeStyle='rgba(255,255,255,0.55)';ctx.lineWidth=1.5;ctx.stroke();
-  }
+  // White border for dark-grey empty slots
+  ctx.strokeStyle=isForced?'rgba(220,150,0,0.9)':'rgba(255,255,255,0.55)';
+  ctx.lineWidth=isForced?2:1.5;
+  if(isForced){ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);}
+  else ctx.stroke();
   ctx.restore();
 }
 
@@ -459,16 +489,13 @@ function drawBoard(){
   ctx.fillStyle='#888';ctx.fillRect(0,0,bw,bh);
 
   const forced=G.phase==='play'?getForcedSpaces():[];
-  const controlled=G.phase==='play'?getControlledSides():new Set();
   const placeable=slots();
 
-  // Dark grey empty slots — forced (amber), controlled (blue-grey+X), normal (white border)
+  // Dark grey empty slots with white borders
   for(const{q,r}of placeable){
     const{x,y}=h2p(q,r);
     if(x<-HS*2||x>bw+HS*2||y<-HS*2||y>bh+HS*2)continue;
-    const k=hk(q,r);
-    const state=forced.some(f=>f.q===q&&f.r===r)?'forced':controlled.has(k)?'controlled':'normal';
-    drawEmptyHex(x,y,state);
+    drawEmptyHex(x,y,forced.some(f=>f.q===q&&f.r===r));
   }
 
   // Placed tiles
@@ -483,8 +510,7 @@ function drawBoard(){
     const{q,r}=hov;const{x,y}=h2p(q,r);
     const rt=rotateTile(G.players[G.cur].hand[G.sel],G.rot);
     const ok=canPlace(q,r,rt),isF=forced.some(f=>f.q===q&&f.r===r);
-    const isC=controlled.has(hk(q,r));
-    drawHex(ctx,x,y,rt,HS,ok&&(G.turnPhase==='free'||isF)&&!isC?0.88:0.15);
+    drawHex(ctx,x,y,rt,HS,ok&&(G.turnPhase==='free'||isF)?0.88:0.2);
   }
 }
 
@@ -528,7 +554,9 @@ function renderPanels(){
     const dot=document.createElement('div');dot.className='pp-dot';dot.style.background=CLR[pl.col];
     const nm=document.createElement('span');nm.className='pp-name';nm.textContent=`P${p+1} ${CN[pl.col]}`;
     const sc=document.createElement('span');sc.className='pp-score';sc.style.color=CLR[pl.col];
-    sc.textContent=(G.board.size?longestChain(pl.col):0)+'pts';
+    const bs=G.board.size?bestScore(pl.col):{score:0,line:0,loop:0};
+    sc.textContent=bs.score+(bs.loop>0?' pts ⟳':' pts');
+    sc.title=bs.loop>0?`Loop ${bs.loop}×2=${bs.loop*2}pts | Line ${bs.line}pts`:`Line: ${bs.line} pts`;
     hdr.append(dot,nm,sc);
     const grid=document.createElement('div');grid.className='hgrid';
     pl.hand.forEach((tile,i)=>{
@@ -564,5 +592,178 @@ document.getElementById('bdone').addEventListener('click',()=>{
 document.addEventListener('keydown',e=>{
   if((e.key==='r'||e.key==='R')&&G.sel!==null&&G.selP===G.cur){G.rot=(G.rot+1)%6;render();}
 });
+document.getElementById('brot').addEventListener('click',()=>{
+  if(G.sel!==null&&G.selP===G.cur){G.rot=(G.rot+1)%6;render();}
+  else setMsg('Select a tile first to rotate','bad');
+});
 window.addEventListener('resize',()=>{resizeBoard();render();});
+
+
+// ══════════════════════════════════════════════════════════════════════
+// MULTIPLAYER — socket.io
+// ══════════════════════════════════════════════════════════════════════
+
+const MP={enabled:false,socket:null,roomCode:null,myIndex:-1,isHost:false,players:[],lobbyColour:null};
+
+// Show lobby on load (hide setup)
+document.getElementById('setup').style.display='none';
+document.getElementById('lobby').style.display='flex';
+
+// ── Local game ──────────────────────────────────────────────────────────
+document.getElementById('btn-local').addEventListener('click',()=>{
+  document.getElementById('lobby').style.display='none';
+  document.getElementById('setup').style.display='flex';
+  buildSetup();
+});
+
+// ── Online game ─────────────────────────────────────────────────────────
+document.getElementById('btn-online').addEventListener('click',()=>{
+  document.getElementById('online-panel').style.display='flex';
+  buildLobbyCols();
+  initSocket();
+});
+
+function buildLobbyCols(){
+  const cont=document.getElementById('lobby-color-opts');cont.innerHTML='';
+  ['R','Y','B','G'].forEach(c=>{
+    const btn=document.createElement('div');
+    btn.style.cssText=`width:28px;height:28px;border-radius:50%;background:${CLR[c]};cursor:pointer;border:2px solid ${MP.lobbyColour===c?'#fff':'transparent'};`;
+    btn.addEventListener('click',()=>{MP.lobbyColour=c;buildLobbyCols();});
+    cont.appendChild(btn);
+  });
+}
+
+function lobbyMsg(t,col='#cc8833'){const el=document.getElementById('lobby-msg');el.textContent=t;el.style.color=col;}
+
+function initSocket(){
+  if(MP.socket)return;
+  MP.socket=io();
+  MP.socket.on('connect',()=>lobbyMsg('Connected','#3db87a'));
+  MP.socket.on('connect_error',()=>lobbyMsg('Cannot reach server'));
+
+  MP.socket.on('roomCreated',({roomCode,players,yourIndex})=>{
+    MP.roomCode=roomCode;MP.myIndex=yourIndex;MP.isHost=true;MP.players=players;
+    showWaiting();
+  });
+  MP.socket.on('joinedRoom',({roomCode,players,yourIndex})=>{
+    MP.roomCode=roomCode;MP.myIndex=yourIndex;MP.isHost=false;MP.players=players;
+    showWaiting();
+  });
+  MP.socket.on('playersUpdated',(players)=>{
+    MP.players=players;renderWaiting();
+    document.getElementById('btn-start-online').style.display=(MP.isHost&&players.length>=2)?'inline-block':'none';
+  });
+  MP.socket.on('playerLeft',({players,leftName})=>{
+    MP.players=players;renderWaiting();lobbyMsg(leftName+' left the room');
+  });
+  MP.socket.on('gameStarted',({gameState,players})=>{
+    MP.players=players;MP.enabled=true;
+    document.getElementById('lobby').style.display='none';
+    document.getElementById('game').style.display='flex';
+    applyRemoteState(gameState);
+    setTimeout(resizeBoard,50);
+  });
+  MP.socket.on('gameUpdated',(gs)=>applyRemoteState(gs));
+  MP.socket.on('errorMessage',(m)=>lobbyMsg(m));
+}
+
+function showWaiting(){
+  document.getElementById('online-panel').style.display='none';
+  document.getElementById('waiting-panel').style.display='flex';
+  document.getElementById('room-code-display').textContent=MP.roomCode;
+  document.getElementById('btn-start-online').style.display=(MP.isHost&&MP.players.length>=2)?'inline-block':'none';
+  renderWaiting();
+}
+function renderWaiting(){
+  const cont=document.getElementById('waiting-players');cont.innerHTML='';
+  MP.players.forEach((p,i)=>{
+    const row=document.createElement('div');row.className='wp-row';
+    const dot=document.createElement('div');dot.className='wp-dot';dot.style.background=CLR[p.colour]||'#888';
+    const nm=document.createElement('span');nm.textContent=p.name+(p.isHost?' 👑':'')+(i===MP.myIndex?' (you)':'');
+    row.append(dot,nm);cont.appendChild(row);
+  });
+}
+
+document.getElementById('btn-create-room').addEventListener('click',()=>{
+  const name=document.getElementById('inp-name').value.trim()||'Player 1';
+  if(!MP.lobbyColour){lobbyMsg('Pick a colour first');return;}
+  MP.socket.emit('createRoom',{playerName:name,colour:MP.lobbyColour});
+});
+
+document.getElementById('btn-join-room').addEventListener('click',()=>{
+  const inp=document.getElementById('inp-room-code');
+  const btn=document.getElementById('btn-confirm-join');
+  const vis=inp.style.display!=='none';
+  inp.style.display=vis?'none':'block';
+  btn.style.display=vis?'none':'block';
+});
+
+document.getElementById('btn-confirm-join').addEventListener('click',()=>{
+  const name=document.getElementById('inp-name').value.trim()||'Player';
+  if(!MP.lobbyColour){lobbyMsg('Pick a colour first');return;}
+  const code=document.getElementById('inp-room-code').value.trim().toUpperCase();
+  if(code.length!==4){lobbyMsg('Enter the 4-letter room code');return;}
+  MP.socket.emit('joinRoom',{roomCode:code,playerName:name,colour:MP.lobbyColour});
+});
+
+document.getElementById('btn-start-online').addEventListener('click',()=>{
+  if(!MP.isHost)return;
+  const playerDefs=MP.players.map(p=>({col:p.colour}));
+  startGame(playerDefs);
+  MP.socket.emit('startGame',{roomCode:MP.roomCode,gameState:serialiseG()});
+});
+
+// ── Serialise / deserialise ────────────────────────────────────────────
+function serialiseG(){
+  return{
+    board:Array.from(G.board.entries()).map(([k,t])=>[k,{n:t.n,edges:t.edges}]),
+    bag:G.bag.map(t=>({n:t.n,edges:t.edges})),
+    players:G.players.map(p=>({col:p.col,hand:p.hand.map(t=>({n:t.n,edges:t.edges}))})),
+    cur:G.cur,phase:G.phase,turnPhase:G.turnPhase,
+  };
+}
+
+function hydrateTile(t){return{...t,curves:edgesToCurves(t.edges)};}
+
+function applyRemoteState(gs){
+  G.board=new Map(gs.board.map(([k,t])=>[k,hydrateTile(t)]));
+  G.bag=gs.bag.map(hydrateTile);
+  G.players=gs.players.map(p=>({...p,hand:p.hand.map(hydrateTile)}));
+  G.cur=gs.cur;G.phase=gs.phase;G.turnPhase=gs.turnPhase;
+  G.sel=null;G.selP=-1;G.rot=0;
+  // Recompute turn message
+  if(G.phase==='play'){
+    const isMyTurn=!MP.enabled||(MP.myIndex===G.cur);
+    if(G.turnPhase==='forced1'||G.turnPhase==='forced2'){
+      setMsg(`P${G.cur+1} (${CN[G.players[G.cur].col]}): fill forced spaces first`,'warn');
+    } else {
+      if(isMyTurn)setMsg(`P${G.cur+1} (${CN[G.players[G.cur].col]}): make your free move`,'info');
+      else setMsg(`Waiting for P${G.cur+1} (${CN[G.players[G.cur].col]})…`,'info');
+    }
+  }
+  updateUI();render();
+}
+
+// ── Emit state after successful moves ────────────────────────────────────
+function emitState(){
+  if(!MP.enabled||!MP.socket)return;
+  MP.socket.emit('updateGame',{roomCode:MP.roomCode,gameState:serialiseG()});
+}
+
+// ── Patch doClick to block non-current player and emit on success ────────
+const _origDoClick=doClick;
+function doClick(px,py){
+  if(MP.enabled&&MP.myIndex!==G.cur){
+    setMsg(`Waiting for P${G.cur+1} (${CN[G.players[G.cur].col]})…`,'info');return;
+  }
+  const sizeBefore=G.board.size;
+  _origDoClick(px,py);
+  if(G.board.size!==sizeBefore)emitState();
+}
+
+// Emit after "→ Continue" (forced space / end turn button)
+document.getElementById('bdone').addEventListener('click',()=>{
+  if(MP.enabled)setTimeout(emitState,30);
+});
+
 </script>
