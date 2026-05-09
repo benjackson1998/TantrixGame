@@ -86,9 +86,7 @@ body{font-family:system-ui,sans-serif;}
     <button class="cnt-btn" data-n="4">4</button>
   </div>
   <div id="pconf"></div>
- <button id="create-room">Create Room</button>
-<button id="join-room">Join Room</button>
-<button id="start-btn">Start Game</button>
+  <button id="start-btn">Start Game</button>
 </div>
 
 <div id="game">
@@ -105,13 +103,7 @@ body{font-family:system-ui,sans-serif;}
   </div>
 </div>
 
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-
 <script>
-
-const socket = io('http://localhost:3000');
-let ROOM_CODE = null;
-
 const EDGE_STRINGS=[
 'GGRRYY','GGYYRR','GGYRRY','RRGYYG','GGRYYR','YGRYRG','GRYGYR','RGYRYG',
 'YYRGRG','YYGRGR','GGRYRY','GGYRYR','RRGYGY','RRYGYG','BBYYGG','BBGGYY',
@@ -249,85 +241,11 @@ document.querySelectorAll('.cnt-btn').forEach(b=>{
   });
 });
 buildSetup();
-
-// CREATE ROOM
-
-document.getElementById('create-room').addEventListener('click', () => {
-
-  socket.emit('createRoom');
-
-});
-
-socket.on('roomCreated', roomCode => {
-
-  ROOM_CODE = roomCode;
-
-  alert('Room code: ' + roomCode);
-
-});
-
-// JOIN ROOM
-
-document.getElementById('join-room').addEventListener('click', () => {
-
-  const code = prompt('Enter room code');
-
-  if (!code) return;
-
-  ROOM_CODE = code.toUpperCase();
-
-  socket.emit('joinRoom', ROOM_CODE);
-
-});
-
-socket.on('joinedRoom', roomCode => {
-
-  ROOM_CODE = roomCode;
-
-  alert('Joined room: ' + roomCode);
-
-});
-
-socket.on('errorMessage', msg => {
-
-  alert(msg);
-
-});
-
-// START GAME
-
 document.getElementById('start-btn').addEventListener('click',()=>{
-
-  if(!ROOM_CODE){
-    alert('Create or join a room first');
-    return;
-  }
-
-  if(setupPlayers.some(p=>!p.col)){
-    alert('Each player needs a colour.');
-    return;
-  }
-
+  if(setupPlayers.some(p=>!p.col)){alert('Each player needs a colour.');return;}
   document.getElementById('setup').style.display='none';
   document.getElementById('game').style.display='flex';
-
   startGame(setupPlayers.map(p=>({...p})));
-
-  socket.emit('hostGameState', {
-
-    roomCode: ROOM_CODE,
-
-    gameState: {
-      board: Array.from(G.board.entries()),
-      bag: G.bag,
-      players: G.players,
-      cur: G.cur,
-      phase: G.phase,
-      turnPhase: G.turnPhase
-    }
-
-  });
-
 });
 
 // ── Game ──────────────────────────────────────────────────────────────────────
@@ -349,15 +267,38 @@ function getForcedSpaces(){
   return[...cands].map(fk).filter(({q,r})=>isForced(q,r));
 }
 function bagEmpty(){return G.bag.length===0;}
+
+// Returns set of hk strings that are "controlled sides":
+// empty hexes adjacent to a forced space (that are not themselves forced).
+// These cannot be filled until the adjacent forced space is filled.
+function getControlledSides(){
+  if(bagEmpty()) return new Set();
+  const forced=getForcedSpaces();
+  const forcedSet=new Set(forced.map(({q,r})=>hk(q,r)));
+  const controlled=new Set();
+  for(const{q:fq,r:fr}of forced){
+    for(const{q:nq,r:nr}of nbrs(fq,fr)){
+      const k=hk(nq,nr);
+      if(!G.board.has(k)&&!forcedSet.has(k)) controlled.add(k);
+    }
+  }
+  return controlled;
+}
 function checkRestrictions(q,r,tile){
   if(bagEmpty())return null;
   for(const{q:nq,r:nr}of nbrs(q,r)){
     if(G.board.has(hk(nq,nr)))continue;
     if(occCount(nq,nr,q,r)>=4)return'Would create a 4-sided space';
   }
+  // Rule 3: controlled sides.
+  // A "controlled side" is any empty hex adjacent to a forced space.
+  // You may not place there unless you ARE filling the forced space.
+  // (q,r) is allowed if it IS itself a forced space (you're filling it).
   if(!isForced(q,r)){
-    for(const{q:nq,r:nr}of nbrs(q,r))
-      if(!G.board.has(hk(nq,nr))&&isForced(nq,nr))return'Cannot place next to a forced space — fill it first';
+    for(const{q:nq,r:nr}of nbrs(q,r)){
+      if(!G.board.has(hk(nq,nr))&&isForced(nq,nr))
+        return'Cannot place here — it is a controlled side of a forced space (fill the forced space first)';
+    }
   }
   for(const{q:nq,r:nr}of nbrs(q,r)){
     if(G.board.has(hk(nq,nr)))continue;
@@ -377,7 +318,10 @@ function canPlace(q,r,tile){
   if(G.board.has(hk(q,r)))return false;if(G.board.size===0)return true;
   const ns=nbrs(q,r);let adj=false;
   for(let d=0;d<6;d++){const nk=hk(ns[d].q,ns[d].r);if(!G.board.has(nk))continue;adj=true;if(tile.edges[(d+3)%6]!==G.board.get(nk).edges[d])return false;}
-  return adj&&checkRestrictions(q,r,tile)===null;
+  if(!adj)return false;
+  // Explicit controlled-side check: if this hex is a controlled side, block it
+  if(!bagEmpty()&&!isForced(q,r)&&getControlledSides().has(hk(q,r)))return false;
+  return checkRestrictions(q,r,tile)===null;
 }
 function canPlaceReason(q,r,tile){
   if(G.board.has(hk(q,r)))return'Space occupied';if(G.board.size===0)return null;
@@ -419,29 +363,8 @@ function updateUI(){
   document.getElementById('bag-count').textContent=G.bag.length;
 }
 function placeTile(q,r,rt,handIdx){
-
-  G.board.set(hk(q,r),rt);
-
-  G.players[G.cur].hand.splice(handIdx,1);
-
-  socket.emit('updateGame', {
-
-    roomCode: ROOM_CODE,
-
-    gameState: {
-      board: Array.from(G.board.entries()),
-      bag: G.bag,
-      players: G.players,
-      cur: G.cur,
-      phase: G.phase,
-      turnPhase: G.turnPhase
-    }
-
-  });
-
-  G.sel = null;
+  G.board.set(hk(q,r),rt);G.players[G.cur].hand.splice(handIdx,1);G.sel=null;G.selP=-1;G.rot=0;drawT(G.cur);
 }
-
 function doClick(px,py){
   if(G.phase!=='play')return;
   if(G.sel===null||G.selP!==G.cur){setMsg('Select a tile from your hand first','bad');return;}
@@ -508,16 +431,26 @@ function rndH(q,r){
   if(dq>dr&&dq>ds)rq=-rr-rs;else if(dr>ds)rr=-rq-rs;return{q:rq,r:rr};
 }
 
-function drawEmptyHex(cx,cy,isForced){
+function drawEmptyHex(cx,cy,state){
+  // state: 'normal' | 'forced' | 'controlled'
   ctx.save();
   hexPath(ctx,cx,cy,HS);
-  ctx.fillStyle=isForced?'#2a1800':'#333';
+  ctx.fillStyle=state==='forced'?'#2a1800':state==='controlled'?'#1a1a2a':'#333';
   ctx.fill();
-  // White border for dark-grey empty slots
-  ctx.strokeStyle=isForced?'rgba(220,150,0,0.9)':'rgba(255,255,255,0.55)';
-  ctx.lineWidth=isForced?2:1.5;
-  if(isForced){ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);}
-  else ctx.stroke();
+  if(state==='forced'){
+    ctx.strokeStyle='rgba(220,150,0,0.9)';ctx.lineWidth=2;
+    ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);
+  } else if(state==='controlled'){
+    // Subtle grey-blue tint with dimmed white border — "greyed out" per rulebook
+    ctx.strokeStyle='rgba(255,255,255,0.22)';ctx.lineWidth=1.5;ctx.stroke();
+    // Draw a small lock icon via X mark to signal "blocked"
+    ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;
+    const s=HS*0.18;
+    ctx.beginPath();ctx.moveTo(cx-s,cy-s);ctx.lineTo(cx+s,cy+s);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx+s,cy-s);ctx.lineTo(cx-s,cy+s);ctx.stroke();
+  } else {
+    ctx.strokeStyle='rgba(255,255,255,0.55)';ctx.lineWidth=1.5;ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -526,13 +459,16 @@ function drawBoard(){
   ctx.fillStyle='#888';ctx.fillRect(0,0,bw,bh);
 
   const forced=G.phase==='play'?getForcedSpaces():[];
+  const controlled=G.phase==='play'?getControlledSides():new Set();
   const placeable=slots();
 
-  // Dark grey empty slots with white borders
+  // Dark grey empty slots — forced (amber), controlled (blue-grey+X), normal (white border)
   for(const{q,r}of placeable){
     const{x,y}=h2p(q,r);
     if(x<-HS*2||x>bw+HS*2||y<-HS*2||y>bh+HS*2)continue;
-    drawEmptyHex(x,y,forced.some(f=>f.q===q&&f.r===r));
+    const k=hk(q,r);
+    const state=forced.some(f=>f.q===q&&f.r===r)?'forced':controlled.has(k)?'controlled':'normal';
+    drawEmptyHex(x,y,state);
   }
 
   // Placed tiles
@@ -547,7 +483,8 @@ function drawBoard(){
     const{q,r}=hov;const{x,y}=h2p(q,r);
     const rt=rotateTile(G.players[G.cur].hand[G.sel],G.rot);
     const ok=canPlace(q,r,rt),isF=forced.some(f=>f.q===q&&f.r===r);
-    drawHex(ctx,x,y,rt,HS,ok&&(G.turnPhase==='free'||isF)?0.88:0.2);
+    const isC=controlled.has(hk(q,r));
+    drawHex(ctx,x,y,rt,HS,ok&&(G.turnPhase==='free'||isF)&&!isC?0.88:0.15);
   }
 }
 
@@ -618,50 +555,14 @@ function renderPanels(){
 
 document.getElementById('bn').addEventListener('click',()=>{
   document.getElementById('game').style.display='none';
-  document.getElementById('setup').style.display='flex';
-  buildSetup();
+  document.getElementById('setup').style.display='flex';buildSetup();
 });
-
 document.getElementById('bdone').addEventListener('click',()=>{
-  if(G.turnPhase==='forced1'){
-    G.turnPhase='free';
-    setMsg(`P${G.cur+1}: make your free move`,'info');
-    updateUI();
-    render();
-  }
-  else if(G.turnPhase==='forced2'){
-    endTurn();
-  }
+  if(G.turnPhase==='forced1'){G.turnPhase='free';setMsg(`P${G.cur+1}: make your free move`,'info');updateUI();render();}
+  else if(G.turnPhase==='forced2')endTurn();
 });
-
 document.addEventListener('keydown',e=>{
-  if((e.key==='r'||e.key==='R')&&G.sel!==null&&G.selP===G.cur){
-    G.rot=(G.rot+1)%6;
-    render();
-  }
+  if((e.key==='r'||e.key==='R')&&G.sel!==null&&G.selP===G.cur){G.rot=(G.rot+1)%6;render();}
 });
-
-window.addEventListener('resize',()=>{
-  resizeBoard();
-  render();
-});
-
-
-// MULTIPLAYER UPDATES
-socket.on('gameUpdated', gameState => {
-
-  G.board = new Map(gameState.board);
-  G.bag = gameState.bag;
-  G.players = gameState.players;
-  G.cur = gameState.cur;
-  G.phase = gameState.phase;
-  G.turnPhase = gameState.turnPhase;
-
-  render();
-
-});
-
-// REQUEST CURRENT GAME
-socket.emit('requestGameState');
-
+window.addEventListener('resize',()=>{resizeBoard();render();});
 </script>
