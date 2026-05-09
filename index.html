@@ -111,11 +111,12 @@ body{font-family:system-ui,sans-serif;}
     <div><label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Your colour</label>
     <div style="display:flex;gap:8px;justify-content:center;" id="lobby-color-opts"></div></div>
     <div class="online-btns">
-      <button id="btn-create-room">Create Room</button>
-      <button id="btn-join-room">Join Room</button>
+      <button id="btn-create-room">➕ Create Room</button>
     </div>
-    <input id="inp-room-code" placeholder="ROOM CODE" maxlength="4" style="display:none;text-transform:uppercase;letter-spacing:.15em;"/>
-    <button id="btn-confirm-join" style="display:none;padding:10px;border-radius:6px;border:1px solid #2a6040;background:#1a3d28;color:#3db87a;font-size:13px;font-weight:600;cursor:pointer;">Join →</button>
+    <div style="display:flex;align-items:center;gap:6px;width:100%;">
+      <input id="inp-room-code" placeholder="Room code" maxlength="4" style="flex:1;text-transform:uppercase;letter-spacing:.15em;text-align:center;"/>
+      <button id="btn-confirm-join" style="padding:10px 14px;border-radius:6px;border:1px solid #2a6040;background:#1a3d28;color:#3db87a;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">Join →</button>
+    </div>
   </div>
   <div id="waiting-panel">
     <div style="font-size:13px;color:#888;">Share this code with friends:</div>
@@ -319,6 +320,20 @@ function getForcedSpaces(){
   return[...cands].map(fk).filter(({q,r})=>isForced(q,r));
 }
 function bagEmpty(){return G.bag.length===0;}
+
+function getControlledSides(){
+  if(bagEmpty())return new Set();
+  const forced=getForcedSpaces();
+  const forcedSet=new Set(forced.map(({q,r})=>hk(q,r)));
+  const controlled=new Set();
+  for(const{q:fq,r:fr}of forced){
+    for(const{q:nq,r:nr}of nbrs(fq,fr)){
+      const k=hk(nq,nr);
+      if(!G.board.has(k)&&!forcedSet.has(k))controlled.add(k);
+    }
+  }
+  return controlled;
+}
 function checkRestrictions(q,r,tile){
   if(bagEmpty())return null;
   for(const{q:nq,r:nr}of nbrs(q,r)){
@@ -347,7 +362,9 @@ function canPlace(q,r,tile){
   if(G.board.has(hk(q,r)))return false;if(G.board.size===0)return true;
   const ns=nbrs(q,r);let adj=false;
   for(let d=0;d<6;d++){const nk=hk(ns[d].q,ns[d].r);if(!G.board.has(nk))continue;adj=true;if(tile.edges[(d+3)%6]!==G.board.get(nk).edges[d])return false;}
-  return adj&&checkRestrictions(q,r,tile)===null;
+  if(!adj)return false;
+  if(!bagEmpty()&&!isForced(q,r)&&getControlledSides().has(hk(q,r)))return false;
+  return checkRestrictions(q,r,tile)===null;
 }
 function canPlaceReason(q,r,tile){
   if(G.board.has(hk(q,r)))return'Space occupied';if(G.board.size===0)return null;
@@ -471,16 +488,25 @@ function rndH(q,r){
   if(dq>dr&&dq>ds)rq=-rr-rs;else if(dr>ds)rr=-rq-rs;return{q:rq,r:rr};
 }
 
-function drawEmptyHex(cx,cy,isForced){
+function drawEmptyHex(cx,cy,state){
+  // state: 'normal' | 'forced' | 'controlled'
   ctx.save();
   hexPath(ctx,cx,cy,HS);
-  ctx.fillStyle=isForced?'#2a1800':'#333';
+  ctx.fillStyle=state==='forced'?'#2a1800':state==='controlled'?'#1a1a28':'#333';
   ctx.fill();
-  // White border for dark-grey empty slots
-  ctx.strokeStyle=isForced?'rgba(220,150,0,0.9)':'rgba(255,255,255,0.55)';
-  ctx.lineWidth=isForced?2:1.5;
-  if(isForced){ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);}
-  else ctx.stroke();
+  if(state==='forced'){
+    ctx.strokeStyle='rgba(220,150,0,0.9)';ctx.lineWidth=2;
+    ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);
+  } else if(state==='controlled'){
+    ctx.strokeStyle='rgba(255,255,255,0.25)';ctx.lineWidth=1.5;ctx.stroke();
+    // Small X to signal blocked
+    ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1.2;
+    const s=HS*0.16;
+    ctx.beginPath();ctx.moveTo(cx-s,cy-s);ctx.lineTo(cx+s,cy+s);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx+s,cy-s);ctx.lineTo(cx-s,cy+s);ctx.stroke();
+  } else {
+    ctx.strokeStyle='rgba(255,255,255,0.55)';ctx.lineWidth=1.5;ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -489,13 +515,15 @@ function drawBoard(){
   ctx.fillStyle='#888';ctx.fillRect(0,0,bw,bh);
 
   const forced=G.phase==='play'?getForcedSpaces():[];
+  const controlled=G.phase==='play'?getControlledSides():new Set();
   const placeable=slots();
 
-  // Dark grey empty slots with white borders
   for(const{q,r}of placeable){
     const{x,y}=h2p(q,r);
     if(x<-HS*2||x>bw+HS*2||y<-HS*2||y>bh+HS*2)continue;
-    drawEmptyHex(x,y,forced.some(f=>f.q===q&&f.r===r));
+    const k=hk(q,r);
+    const state=forced.some(f=>f.q===q&&f.r===r)?'forced':controlled.has(k)?'controlled':'normal';
+    drawEmptyHex(x,y,state);
   }
 
   // Placed tiles
@@ -510,7 +538,7 @@ function drawBoard(){
     const{q,r}=hov;const{x,y}=h2p(q,r);
     const rt=rotateTile(G.players[G.cur].hand[G.sel],G.rot);
     const ok=canPlace(q,r,rt),isF=forced.some(f=>f.q===q&&f.r===r);
-    drawHex(ctx,x,y,rt,HS,ok&&(G.turnPhase==='free'||isF)?0.88:0.2);
+    drawHex(ctx,x,y,rt,HS,ok&&(G.turnPhase==='free'||isF)?0.88:0.15);
   }
 }
 
@@ -690,13 +718,7 @@ document.getElementById('btn-create-room').addEventListener('click',()=>{
   MP.socket.emit('createRoom',{playerName:name,colour:MP.lobbyColour});
 });
 
-document.getElementById('btn-join-room').addEventListener('click',()=>{
-  const inp=document.getElementById('inp-room-code');
-  const btn=document.getElementById('btn-confirm-join');
-  const vis=inp.style.display!=='none';
-  inp.style.display=vis?'none':'block';
-  btn.style.display=vis?'none':'block';
-});
+// btn-join-room removed — join input is always visible
 
 document.getElementById('btn-confirm-join').addEventListener('click',()=>{
   const name=document.getElementById('inp-name').value.trim()||'Player';
