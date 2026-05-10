@@ -81,6 +81,7 @@ body{font-family:system-ui,sans-serif;}
   #phase-ind{font-size:13px;}
   #bbar{padding:10px 14px;gap:10px;}
   #bbar button{font-size:15px;padding:11px 16px;}
+  #brot{background:#1a2a3d!important;border-color:#2a4060!important;color:#5599dd!important;font-size:18px!important;padding:11px 20px!important;}
   .badge{font-size:11px;padding:2px 5px;}
 }
 </style>
@@ -152,7 +153,7 @@ body{font-family:system-ui,sans-serif;}
 </div>
 
 <div id="game">
-  <div id="hdr"><h2>⬡ TANTRIX</h2><span id="hint">Select tile · R=rotate · click board · drag=pan</span><a href="https://www.tantrix.com/english/TantrixGameRules.html" target="_blank" rel="noopener" style="font-size:11px;color:#555;text-decoration:none;margin-left:10px;white-space:nowrap;">📖 Rules</a></div>
+  <div id="hdr"><h2>⬡ TANTRIX</h2><span id="hint">Select tile · tap twice on board to rotate · drag to pan</span><a href="https://www.tantrix.com/english/TantrixGameRules.html" target="_blank" rel="noopener" style="font-size:11px;color:#555;text-decoration:none;margin-left:10px;white-space:nowrap;">📖 Rules</a></div>
   <div id="sbar"><span id="msg" class="info">…</span><span id="phase-ind" class="pi"></span></div>
   <div id="main">
     <div id="ba"><canvas id="bc"></canvas></div>
@@ -312,7 +313,7 @@ document.getElementById('start-btn').addEventListener('click',()=>{
 });
 
 // ── Game ──────────────────────────────────────────────────────────────────────
-const G={board:new Map(),bag:[],players:[],cur:0,phase:'idle',turnPhase:'free',sel:null,selP:-1,rot:0};
+const G={board:new Map(),bag:[],players:[],cur:0,phase:'idle',turnPhase:'free',sel:null,selP:-1,rot:0,_lastHoverQ:null,_lastHoverR:null,_rotTapQ:null,_rotTapR:null};
 function startGame(playerDefs){
   const bag=TILES.map(t=>({...t}));shuffle(bag);
   G.bag=bag;G.board=new Map();G.players=playerDefs.map(pd=>({col:pd.col,hand:[]}));
@@ -350,10 +351,10 @@ function checkRestrictions(q,r,tile){
     if(G.board.has(hk(nq,nr)))continue;
     if(occCount(nq,nr,q,r)>=4)return'Would create a 4-sided space';
   }
-  if(!isForced(q,r)){
-    for(const{q:nq,r:nr}of nbrs(q,r))
-      if(!G.board.has(hk(nq,nr))&&isForced(nq,nr))return'Cannot place next to a forced space — fill it first';
-  }
+  // Rule 3: any hex adjacent to a forced space is a controlled side and is blocked.
+  // getControlledSides() already excludes forced spaces themselves, so they can still be filled.
+  if(getControlledSides().has(hk(q,r)))
+    return'Cannot place here — it is a controlled side (fill the adjacent forced space first)';
   for(const{q:nq,r:nr}of nbrs(q,r)){
     if(G.board.has(hk(nq,nr)))continue;
     if(occCount(nq,nr,q,r)>=3){
@@ -373,7 +374,7 @@ function canPlace(q,r,tile){
   const ns=nbrs(q,r);let adj=false;
   for(let d=0;d<6;d++){const nk=hk(ns[d].q,ns[d].r);if(!G.board.has(nk))continue;adj=true;if(tile.edges[(d+3)%6]!==G.board.get(nk).edges[d])return false;}
   if(!adj)return false;
-  if(!bagEmpty()&&!isForced(q,r)&&getControlledSides().has(hk(q,r)))return false;
+  if(!bagEmpty()&&getControlledSides().has(hk(q,r)))return false;
   return checkRestrictions(q,r,tile)===null;
 }
 function canPlaceReason(q,r,tile){
@@ -421,6 +422,12 @@ function placeTile(q,r,rt,handIdx){
 function _doClickCore(px,py){
   if(G.phase!=='play')return;
   if(G.sel===null||G.selP!==G.cur){setMsg('Select a tile from your hand first','bad');return;}
+  // Tapping the same hex twice rotates the tile (mobile-friendly)
+  const{q:tq,r:tr}=p2h(px,py);
+  if(G._rotTapQ===tq&&G._rotTapR===tr){
+    G.rot=(G.rot+1)%6;render();return;
+  }
+  G._rotTapQ=tq;G._rotTapR=tr;
   const{q,r}=p2h(px,py);
   const rt=rotateTile(G.players[G.cur].hand[G.sel],G.rot);
   const reason=canPlaceReason(q,r,rt);if(reason){setMsg(reason,'bad');return;}
@@ -492,17 +499,11 @@ function resizeBoard(){
   // Compute hex size: larger on mobile so the board feels zoomed in
   const mobile=window.innerWidth<=600;
   if(mobile){
-    // Board height on mobile = bh (board area height, already excludes panels+bars)
-    // Target ~3.5 hexes vertically: hex height = 1.5*HS per row
-    // bh / (3.5 * 1.5) = bh / 5.25
-    const hsByH=Math.round(bh/5.25);
-    // Also try fitting ~3.5 hexes across width: hex width = sqrt(3)*HS
-    const hsByW=Math.round(bw/6.0);
-    HS=Math.min(hsByH,hsByW); // use smaller so both fit
-    HS=Math.max(52,Math.min(110,HS)); // clamp 52–110
+    HS=Math.round(Math.min(bw,bh*0.7)/4.8);
+    HS=Math.max(64,Math.min(120,HS));
   } else {
-    // Desktop: comfortable size, can always pan
-    HS=48;
+    HS=Math.round(Math.min(bw,bh)/14);
+    HS=Math.max(42,Math.min(72,HS));
   }
   ox=bw/2;oy=bh/2;drawBoard();
 }
@@ -572,7 +573,7 @@ let drag=false,ds=null,doff=null;
 canvas.addEventListener('mousemove',e=>{
   const r=canvas.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;
   if(drag){ox=doff.x+(px-ds.x);oy=doff.y+(py-ds.y);drawBoard();return;}
-  hov=p2h(px,py);drawBoard();
+  hov=p2h(px,py);G._lastHoverQ=hov.q;G._lastHoverR=hov.r;drawBoard();
 });
 canvas.addEventListener('mousedown',e=>{
   drag=false;const r=canvas.getBoundingClientRect();
@@ -630,8 +631,8 @@ function renderPanels(){
   const forced=getForcedSpaces();
   const isMobile=window.innerWidth<=600;
   // Tile canvas size: bigger on desktop
-  const tSz=isMobile?68:86;
-  const hexSz=isMobile?26:32;
+  const tSz=isMobile?80:90;
+  const hexSz=isMobile?30:34;
 
   G.players.forEach((pl,p)=>{
     const isAct=p===G.cur;
