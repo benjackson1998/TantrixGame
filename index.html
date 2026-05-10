@@ -503,12 +503,30 @@ function getControlledSides(){
   const forcedSet=new Set(forced.map(({q,r})=>hk(q,r)));
   const controlled=new Set();
   for(const{q:fq,r:fr}of forced){
-    for(const{q:nq,r:nr}of nbrs(fq,fr)){
-      const k=hk(nq,nr);
-      if(!G.board.has(k)&&!forcedSet.has(k))controlled.add(k);
+    // For each open direction (empty neighbour), cast a ray outward.
+    // ALL empty hexes along that ray are controlled sides — until hitting an occupied tile.
+    for(let d=0;d<6;d++){
+      const[dq,dr]=DIRS[d];
+      // Check if this direction from forced space is open (empty)
+      const adjK=hk(fq+dq,fr+dr);
+      if(G.board.has(adjK))continue; // occupied side — not a controlled direction
+      // Cast ray in direction d from the forced space
+      let cq=fq+dq,cr=fr+dr;
+      while(true){
+        const k=hk(cq,cr);
+        if(G.board.has(k))break; // hit an occupied tile — stop ray
+        controlled.add(k);
+        cq+=dq;cr+=dr;
+        // Safety: stop if way off board (no tiles can be that far)
+        if(Math.abs(cq)>30||Math.abs(cr)>30)break;
+      }
     }
   }
   return controlled;
+}
+// Forced spaces themselves (can always be filled, controlled-side rule doesn't apply to them)
+function getForcedSet(){
+  return new Set(getForcedSpaces().map(({q,r})=>hk(q,r)));
 }
 function checkRestrictions(q,r,tile){
   if(bagEmpty())return null;
@@ -516,10 +534,8 @@ function checkRestrictions(q,r,tile){
     if(G.board.has(hk(nq,nr)))continue;
     if(occCount(nq,nr,q,r)>=4)return'Would create a 4-sided space';
   }
-  // Rule 3: any hex adjacent to a forced space is a controlled side and is blocked.
-  // getControlledSides() already excludes forced spaces themselves, so they can still be filled.
-  if(getControlledSides().has(hk(q,r)))
-    return'Cannot place here — it is a controlled side (fill the adjacent forced space first)';
+  // Rule 3 (controlled sides) is enforced by canPlaceFree() for free moves.
+  // canPlace() (used for forced fills) intentionally skips controlled-side check.
   for(const{q:nq,r:nr}of nbrs(q,r)){
     if(G.board.has(hk(nq,nr)))continue;
     if(occCount(nq,nr,q,r)>=3){
@@ -534,13 +550,31 @@ function checkRestrictions(q,r,tile){
   }
   return null;
 }
+// canPlace: colour matching + placement restrictions.
+// Does NOT check controlled sides — use canPlaceFree for free moves.
 function canPlace(q,r,tile){
   if(G.board.has(hk(q,r)))return false;if(G.board.size===0)return true;
   const ns=nbrs(q,r);let adj=false;
   for(let d=0;d<6;d++){const nk=hk(ns[d].q,ns[d].r);if(!G.board.has(nk))continue;adj=true;if(tile.edges[(d+3)%6]!==G.board.get(nk).edges[d])return false;}
   if(!adj)return false;
-  if(!bagEmpty()&&getControlledSides().has(hk(q,r)))return false;
   return checkRestrictions(q,r,tile)===null;
+}
+// canPlaceFree: canPlace + controlled-side block.
+// Used for free moves — cannot place adjacent to an unfilled forced space.
+function canPlaceFree(q,r,tile){
+  if(!canPlace(q,r,tile))return false;
+  // A forced space itself can be placed on freely only if no OTHER forced space
+  // is adjacent. Actually per rules: free move cannot be adjacent to any forced space.
+  // Even filling a forced space as a "free move" should be blocked if there's
+  // another forced space adjacent. But canFillAnyForced handles forced fills separately.
+  if(!bagEmpty()&&getControlledSides().has(hk(q,r)))return false;
+  return true;
+}
+function canPlaceFreeReason(q,r,tile){
+  const reason=canPlaceReason(q,r,tile);if(reason)return reason;
+  if(!bagEmpty()&&getControlledSides().has(hk(q,r)))
+    return'Cannot place here — it is a controlled side (fill the adjacent forced space first)';
+  return null;
 }
 function canPlaceReason(q,r,tile){
   if(G.board.has(hk(q,r)))return'Space occupied';if(G.board.size===0)return null;
@@ -597,9 +631,15 @@ function _doClickCore(px,py){
   G._rotTapQ=tq;G._rotTapR=tr;
   const{q,r}=p2h(px,py);
   const rt=rotateTile(G.players[G.cur].hand[G.sel],G.rot);
-  const reason=canPlaceReason(q,r,rt);if(reason){setMsg(reason,'bad');return;}
   const forced=getForcedSpaces();const isF=forced.some(f=>f.q===q&&f.r===r);
-  if((G.turnPhase==='forced1'||G.turnPhase==='forced2')&&!isF){setMsg('Must fill a forced space (orange) first','bad');return;}
+  if(G.turnPhase==='forced1'||G.turnPhase==='forced2'){
+    // Forced move: must place on a forced space; use canPlace (no controlled-side block)
+    if(!isF){setMsg('Must fill a forced space (orange) first','bad');return;}
+    const reason=canPlaceReason(q,r,rt);if(reason){setMsg(reason,'bad');return;}
+  } else {
+    // Free move: use canPlaceFree which also blocks controlled sides
+    const reason=canPlaceFreeReason(q,r,rt);if(reason){setMsg(reason,'bad');return;}
+  }
   placeTile(q,r,rt,G.sel);
   if(G.turnPhase==='forced1'||G.turnPhase==='forced2'){
     if(canFillAnyForced())setMsg(`P${G.cur+1}: fill another forced space`,'warn');
@@ -793,8 +833,9 @@ function drawBoard(){
   if(G.phase==='play'&&hov&&G.sel!==null&&G.selP===G.cur&&G.sel<G.players[G.cur].hand.length){
     const{q,r}=hov;const{x,y}=h2p(q,r);
     const rt=rotateTile(G.players[G.cur].hand[G.sel],G.rot);
-    const ok=canPlace(q,r,rt),isF=forced.some(f=>f.q===q&&f.r===r);
-    drawHex(ctx,x,y,rt,HS,ok&&(G.turnPhase==='free'||isF)?0.88:0.15);
+    const isF=forced.some(f=>f.q===q&&f.r===r);
+    const ok=G.turnPhase==='free'?canPlaceFree(q,r,rt):(isF?canPlace(q,r,rt):false);
+    drawHex(ctx,x,y,rt,HS,ok?0.88:0.15);
   }
 }
 
