@@ -7,7 +7,7 @@ body{font-family:system-ui,sans-serif;}
 
 /* ── Setup / lobby screen ── */
 #setup{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:20px;padding:28px;}
-#setup h2{font-size:clamp(22px,5vw,32px);color:#eee;font-weight:700;letter-spacing:.05em;}
+#setup h2{font-size:clamp(22px,5vw,32px);color:#111;font-weight:700;letter-spacing:.05em;}
 #setup .sub{font-size:clamp(13px,2.5vw,16px);color:#666;}
 #cnt-row{display:flex;gap:12px;align-items:center;}
 #cnt-row label{font-size:clamp(14px,2.5vw,16px);color:#aaa;}
@@ -22,15 +22,32 @@ body{font-family:system-ui,sans-serif;}
 #start-btn{padding:clamp(12px,2.5vw,16px) clamp(32px,6vw,52px);background:#1a3d28;border:1px solid #2a6040;color:#3db87a;font-size:clamp(15px,3vw,18px);font-weight:600;border-radius:10px;cursor:pointer;letter-spacing:.03em;}
 #start-btn:hover{background:#1f4d33;}
 
+/* Colour scheme picker */
+#scheme-picker{display:flex;flex-direction:column;gap:8px;width:100%;max-width:340px;}
+#scheme-picker label{font-size:clamp(13px,2.5vw,15px);color:#aaa;font-weight:500;}
+#scheme-select{
+  appearance:none;-webkit-appearance:none;
+  background:#1a1a1a;border:1px solid #333;color:#eee;
+  font-size:clamp(13px,2.5vw,15px);padding:10px 36px 10px 14px;
+  border-radius:8px;cursor:pointer;width:100%;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;
+}
+#scheme-select:focus{outline:none;border-color:#3db87a;}
+#scheme-swatches{display:flex;gap:6px;align-items:center;padding:8px 12px;background:#1a1a1a;border-radius:8px;border:1px solid #2a2a2a;}
+.swatch-item{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;}
+.swatch-dot{width:clamp(26px,5vw,34px);height:clamp(26px,5vw,34px);border-radius:50%;border:2px solid rgba(255,255,255,0.15);}
+.swatch-label{font-size:10px;color:#fff;text-align:center;line-height:1.2;}
+
 /* ── Game screen ── */
 #game{display:none;flex-direction:column;height:100%;position:relative;}
 #hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:#1a1a1a;border-bottom:1px solid #222;flex-shrink:0;}
-#hdr h2{font-size:clamp(14px,3vw,18px);font-weight:700;color:#eee;}
+#hdr h2{font-size:clamp(16px,3.5vw,22px);font-weight:800;color:#ffffff;letter-spacing:0.04em;}
 #hint{font-size:clamp(10px,1.8vw,12px);color:#555;}
-#sbar{padding:5px 14px;background:#161616;border-bottom:1px solid #1e1e1e;font-size:clamp(12px,2.2vw,14px);flex-shrink:0;min-height:30px;display:flex;align-items:center;gap:8px;}
+#sbar{padding:6px 14px;background:#161616;border-bottom:1px solid #1e1e1e;font-size:clamp(14px,2.5vw,17px);flex-shrink:0;min-height:34px;display:flex;align-items:center;gap:8px;}
 #msg{flex:1;}
 #msg.good{color:#3db87a;}#msg.bad{color:#e05555;}#msg.info{color:#5599dd;}#msg.warn{color:#cc8833;}
-#phase-ind{font-size:clamp(10px,2vw,13px);padding:3px 10px;border-radius:10px;font-weight:600;flex-shrink:0;}
+#phase-ind{font-size:clamp(12px,2.2vw,15px);padding:4px 12px;border-radius:10px;font-weight:700;flex-shrink:0;}
 .pf{background:#3d2800;color:#cc8833;border:1px solid #553300;}
 .pfr{background:#002a1a;color:#3db87a;border:1px solid #004422;}
 .pi{background:#222;color:#555;border:1px solid #333;}
@@ -45,9 +62,9 @@ body{font-family:system-ui,sans-serif;}
 .pp{padding:12px 12px 10px;border-bottom:1px solid #1e1e1e;flex-shrink:0;}
 .pp.act{background:#1e1e1e;}
 .pp-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
-.pp-dot{width:13px;height:13px;border-radius:50%;flex-shrink:0;}
-.pp-name{font-size:clamp(12px,1.8vw,15px);font-weight:600;color:#bbb;}
-.pp-score{margin-left:auto;font-size:clamp(14px,2.2vw,18px);font-weight:700;}
+.pp-dot{width:16px;height:16px;border-radius:50%;flex-shrink:0;}
+.pp-name{font-size:clamp(14px,2.2vw,17px);font-weight:600;color:#ddd;}
+.pp-score{margin-left:auto;font-size:clamp(16px,2.6vw,22px);font-weight:800;}
 .hgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
 .hw{cursor:pointer;border-radius:8px;border:2px solid #2a2a2a;padding:3px;background:#1a1a1a;position:relative;}
 .hw:hover{border-color:#5599dd;}
@@ -55,14 +72,14 @@ body{font-family:system-ui,sans-serif;}
 .hw.forced{border-color:#cc8833;background:#1a1000;}
 .hw.inact{opacity:.35;pointer-events:none;}
 .hw canvas{display:block;width:100%;}
-.badge{position:absolute;top:2px;right:2px;font-size:9px;font-weight:700;padding:2px 4px;border-radius:3px;background:#cc8833;color:#fff;line-height:1;}
+.badge{position:absolute;top:2px;right:2px;font-size:11px;font-weight:700;padding:2px 5px;border-radius:3px;background:#cc8833;color:#fff;line-height:1;}
 
 /* ── Bottom bar ── */
 #bbar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#1a1a1a;border-top:1px solid #222;flex-shrink:0;}
-#bbar button{font-size:clamp(12px,2.2vw,15px);padding:clamp(7px,1.5vw,10px) clamp(12px,2.5vw,18px);border-radius:6px;border:1px solid #444;background:#252525;color:#bbb;cursor:pointer;touch-action:manipulation;}
+#bbar button{font-size:clamp(14px,2.5vw,17px);padding:clamp(9px,1.8vw,12px) clamp(14px,2.8vw,20px);border-radius:6px;border:1px solid #444;background:#252525;color:#ddd;cursor:pointer;touch-action:manipulation;}
 #bbar button:hover{background:#333;color:#fff;}
 .bpri{background:#1a3d28!important;border-color:#2a6040!important;color:#3db87a!important;}
-#bag-disp{font-size:clamp(12px,2vw,14px);color:#555;margin-left:auto;}
+#bag-disp{font-size:clamp(14px,2.2vw,16px);color:#888;margin-left:auto;}
 #bag-disp span{color:#bbb;font-weight:600;}
 #bdone{display:none;}
 
@@ -114,7 +131,7 @@ body{font-family:system-ui,sans-serif;}
 .result-crown{font-size:clamp(18px,3.5vw,24px);margin-left:4px;}
 #btn-home{padding:clamp(12px,2.5vw,16px) clamp(32px,6vw,52px);background:#1a3d28;border:1px solid #2a6040;color:#3db87a;font-size:clamp(15px,3vw,18px);font-weight:600;border-radius:10px;cursor:pointer;margin-top:8px;}
 #btn-home:hover{background:#1f4d33;}
-#endscreen .rules-link{font-size:12px;color:#444;text-decoration:none;margin-top:4px;}
+#endscreen .rules-link{font-size:15px;color:#888;text-decoration:none;margin-top:4px;font-weight:500;}
 #endscreen .rules-link:hover{color:#666;}
 
 /* ── Mobile: panels below board ── */
@@ -124,21 +141,22 @@ body{font-family:system-ui,sans-serif;}
   .pp{border-bottom:none;border-right:1px solid #1e1e1e;min-width:200px;flex-shrink:0;padding:8px 10px;}
   .pp-hdr{margin-bottom:6px;}
   .hgrid{gap:5px;}
-  .pp-name{font-size:15px;}
-  .pp-score{font-size:17px;}
+  .pp-name{font-size:17px;}
+  .pp-score{font-size:20px;}
   #hint{display:none;}
-  #hdr h2{font-size:17px;}
-  #sbar{font-size:14px;min-height:34px;}
-  #phase-ind{font-size:13px;}
+  #hdr h2{font-size:20px;}
+  #sbar{font-size:16px;min-height:38px;}
+  #phase-ind{font-size:15px;padding:5px 14px;}
   #bbar{padding:10px 14px;gap:10px;}
-  #bbar button{font-size:15px;padding:11px 16px;}
+  #bbar button{font-size:17px;padding:12px 18px;}
+  #bag-disp{font-size:16px;}
   #brot{background:#1a2a3d!important;border-color:#2a4060!important;color:#5599dd!important;font-size:18px!important;padding:11px 20px!important;}
   .badge{font-size:11px;padding:2px 5px;}
 }
 </style>
 <style>
 #lobby{display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;padding:24px;}
-#lobby h2{font-size:24px;color:#eee;font-weight:700;letter-spacing:.05em;}
+#lobby h2{font-size:24px;color:#111;font-weight:700;letter-spacing:.05em;}
 .mode-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;}
 .mode-btn{padding:14px 28px;border-radius:8px;border:2px solid #444;background:#1a1a1a;color:#ccc;font-size:15px;font-weight:600;cursor:pointer;text-align:center;min-width:140px;}
 .mode-btn:hover{border-color:#3db87a;color:#3db87a;}
@@ -187,7 +205,7 @@ body{font-family:system-ui,sans-serif;}
     <button id="btn-start-online">Start Game →</button>
   </div>
   <div id="lobby-msg"></div>
-  <a href="https://www.tantrix.com/english/TantrixGameRules.html" target="_blank" rel="noopener" style="font-size:12px;color:#555;text-decoration:none;margin-top:4px;">📖 How to play — Official Tantrix Rules</a>
+  <a href="https://www.tantrix.com/english/TantrixGameRules.html" target="_blank" rel="noopener" style="font-size:15px;color:#333;text-decoration:none;margin-top:4px;font-weight:500;">📖 How to play — Official Tantrix Rules</a>
 </div>
 
 <div id="setup">
@@ -200,11 +218,20 @@ body{font-family:system-ui,sans-serif;}
     <button class="cnt-btn" data-n="4">4</button>
   </div>
   <div id="pconf"></div>
+  <div id="scheme-picker">
+    <label for="scheme-select">Colour scheme</label>
+    <select id="scheme-select">
+      <option value="classic">Classic — Red · Yellow · Green · Blue</option>
+      <option value="cbfriendly">Colour-blind friendly — Blue · Orange · Teal · Magenta</option>
+      <option value="vivid">Vivid — Cyan · Gold · Purple · Lime</option>
+    </select>
+    <div id="scheme-swatches"></div>
+  </div>
   <button id="start-btn">Start Game</button>
 </div>
 
 <div id="game">
-  <div id="hdr"><h2>⬡ TANTRIX</h2><span id="hint">Select tile · tap twice on board to rotate · drag to pan</span><a href="https://www.tantrix.com/english/TantrixGameRules.html" target="_blank" rel="noopener" style="font-size:11px;color:#555;text-decoration:none;margin-left:10px;white-space:nowrap;">📖 Rules</a></div>
+  <div id="hdr"><h2>⬡ TANTRIX</h2><span id="hint">Select tile · tap twice on board to rotate · drag to pan</span><a href="https://www.tantrix.com/english/TantrixGameRules.html" target="_blank" rel="noopener" style="font-size:14px;color:#bbb;text-decoration:none;margin-left:10px;white-space:nowrap;font-weight:500;">📖 Rules</a></div>
   <div id="sbar"><span id="msg" class="info">…</span><span id="phase-ind" class="pi"></span></div>
   <!-- Game over modal overlay (sits over the board) -->
 <div id="gameover-overlay">
@@ -247,8 +274,42 @@ const EDGE_STRINGS=[
 'BBRYRY','BBYRYR','BBGGRR','BBRRGG','BBGRRG','BBRGGR','GGBRRB','GBRGRB',
 'RBGRGB','BGRBRG','GGBRBR','GGRBRB','RRBGBG','RRGBGB','BBRGRG','BBGRGR',
 ];
-const CLR={R:'#d42020',Y:'#e8b800',G:'#1a8a1a',B:'#1a50cc'};
-const CN={R:'Red',Y:'Yellow',G:'Green',B:'Blue'};
+// ── Colour schemes ────────────────────────────────────────────────────────────
+const SCHEMES = {
+  classic: {
+    name: 'Classic',
+    cols: {
+      R:{hex:'#d42020',label:'Red'},
+      Y:{hex:'#e8b800',label:'Yellow'},
+      G:{hex:'#1a8a1a',label:'Green'},
+      B:{hex:'#1a50cc',label:'Blue'},
+    }
+  },
+  cbfriendly: {
+    name: 'Colour-blind friendly',
+    cols: {
+      R:{hex:'#0072B2',label:'Blue'},
+      Y:{hex:'#E69F00',label:'Orange'},
+      G:{hex:'#009E73',label:'Teal'},
+      B:{hex:'#CC79A7',label:'Magenta'},
+    }
+  },
+  vivid: {
+    name: 'Vivid',
+    cols: {
+      R:{hex:'#00B7FF',label:'Cyan'},
+      Y:{hex:'#FFC400',label:'Gold'},
+      G:{hex:'#9C4DFF',label:'Purple'},
+      B:{hex:'#7DFF4D',label:'Lime'},
+    }
+  },
+};
+
+let activeScheme = 'classic';
+
+// CLR and CN are live lookups — always reflect active scheme
+const CLR = new Proxy({}, {get:(_,k)=>SCHEMES[activeScheme].cols[k]?.hex||'#888'});
+const CN  = new Proxy({}, {get:(_,k)=>SCHEMES[activeScheme].cols[k]?.label||k});
 const ALL_COLS=['R','Y','B','G'];
 
 function edgesToCurves(es){
@@ -368,6 +429,28 @@ function buildSetup(){
     div.append(lbl,opts);conf.appendChild(div);
   });
 }
+// ── Colour scheme picker logic ────────────────────────────────────────────────
+function renderSwatches(){
+  const cont=document.getElementById('scheme-swatches');
+  if(!cont)return;
+  cont.innerHTML='';
+  const scheme=SCHEMES[activeScheme];
+  Object.entries(scheme.cols).forEach(([k,{hex,label}])=>{
+    const item=document.createElement('div');item.className='swatch-item';
+    const dot=document.createElement('div');dot.className='swatch-dot';dot.style.background=hex;
+    const lbl=document.createElement('div');lbl.className='swatch-label';lbl.textContent=label;
+    item.append(dot,lbl);cont.appendChild(item);
+  });
+}
+
+document.getElementById('scheme-select').addEventListener('change',e=>{
+  activeScheme=e.target.value;
+  renderSwatches();
+  buildSetup(); // rebuild colour pickers with new colours
+});
+
+renderSwatches(); // initial render
+
 document.querySelectorAll('.cnt-btn').forEach(b=>{
   b.addEventListener('click',()=>{
     document.querySelectorAll('.cnt-btn').forEach(x=>x.classList.remove('active'));
@@ -947,12 +1030,19 @@ function serialiseG(){
     bag:G.bag.map(t=>({n:t.n,edges:t.edges})),
     players:G.players.map(p=>({col:p.col,hand:p.hand.map(t=>({n:t.n,edges:t.edges}))})),
     cur:G.cur,phase:G.phase,turnPhase:G.turnPhase,
+    scheme:activeScheme,
   };
 }
 
 function hydrateTile(t){return{...t,curves:edgesToCurves(t.edges)};}
 
 function applyRemoteState(gs){
+  if(gs.scheme&&gs.scheme!==activeScheme){
+    activeScheme=gs.scheme;
+    const sel=document.getElementById('scheme-select');
+    if(sel)sel.value=activeScheme;
+    renderSwatches();
+  }
   G.board=new Map(gs.board.map(([k,t])=>[k,hydrateTile(t)]));
   G.bag=gs.bag.map(hydrateTile);
   G.players=gs.players.map(p=>({...p,hand:p.hand.map(hydrateTile)}));
