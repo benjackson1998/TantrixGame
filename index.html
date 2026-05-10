@@ -68,6 +68,33 @@ body{font-family:system-ui,sans-serif;}
 #log-hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #2a2a2a;flex-shrink:0;background:#222;}
 #log-hdr span{font-size:12px;font-weight:600;color:#bbb;}
 #log-close{background:none;border:none;color:#aaa;font-size:18px;cursor:pointer;padding:4px 8px;line-height:1;border-radius:4px;touch-action:manipulation;}
+
+/* ── How to play panel (game screen dropdown) ── */
+#help-btn{font-size:clamp(12px,2.2vw,15px);padding:clamp(7px,1.5vw,10px) clamp(12px,2.5vw,18px);border-radius:6px;border:1px solid #444;background:#252525;color:#ddd;cursor:pointer;touch-action:manipulation;}
+#help-btn:hover{background:#333;color:#fff;}
+#help-panel{display:none;position:absolute;right:0;bottom:48px;width:min(320px,92vw);background:#1a1a1a;border:1px solid #333;border-radius:10px 0 0 10px;z-index:60;flex-direction:column;overflow:hidden;box-shadow:-4px 0 20px rgba(0,0,0,0.5);}
+#help-panel.open{display:flex;}
+#help-hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #2a2a2a;flex-shrink:0;background:#222;}
+#help-hdr span{font-size:12px;font-weight:600;color:#bbb;}
+#help-close{background:none;border:none;color:#aaa;font-size:18px;cursor:pointer;padding:4px 8px;line-height:1;border-radius:4px;touch-action:manipulation;}
+#help-close:hover{color:#eee;}
+#help-body{padding:12px 14px;font-size:12px;color:#bbb;line-height:1.6;overflow-y:auto;max-height:60vh;}
+#help-body h4{font-size:12px;font-weight:700;color:#eee;margin:10px 0 4px;text-transform:uppercase;letter-spacing:.06em;}
+#help-body h4:first-child{margin-top:0;}
+#help-body p{margin:0 0 6px;color:#999;}
+#help-body ul{margin:0 0 8px;padding-left:16px;}
+#help-body li{margin-bottom:3px;color:#999;}
+#help-body .tip{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;background:#222;border-radius:6px;margin-bottom:5px;font-size:11px;}
+#help-body .tip-icon{font-size:16px;flex-shrink:0;line-height:1.3;}
+
+/* ── Home screen how-to section ── */
+#home-howto{width:100%;max-width:360px;background:#f7f7f7;border-radius:10px;padding:14px 16px;margin-top:4px;}
+#home-howto h3{font-size:14px;font-weight:700;color:#333;margin:0 0 10px;letter-spacing:.03em;}
+.howto-tip{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;}
+.howto-tip:last-child{margin-bottom:0;}
+.howto-icon{font-size:20px;flex-shrink:0;line-height:1.3;}
+.howto-text{font-size:13px;color:#555;line-height:1.5;}
+.howto-text strong{color:#333;}
 #log-close:hover{color:#eee;}
 #log-entries{overflow-y:scroll;flex:1;padding:4px 0;}
 .log-entry{display:flex;align-items:flex-start;gap:6px;padding:4px 10px;border-bottom:1px solid #1e1e1e;font-size:10px;line-height:1.35;}
@@ -220,7 +247,7 @@ body{font-family:system-ui,sans-serif;}
   <h2>⬡ TANTRIX</h2>
   <div class="mode-btns">
     <div class="mode-btn" id="btn-local">🖥 Local Game<br><small style="font-weight:400;font-size:11px;color:#777">Same device</small></div>
-    <div class="mode-btn" id="btn-online">🌐 Online Game<br><small style="font-weight:400;font-size:11px;color:#777">Play over network</small></div>
+    <div class="mode-btn" id="btn-online" style="opacity:0.45;cursor:not-allowed;border-color:#333;position:relative;" title="Coming soon">🌐 Online Game<br><small style="font-weight:400;font-size:11px;color:#666">Play over network</small><br><small style="font-weight:700;font-size:11px;color:#cc8833;letter-spacing:.05em;">COMING SOON</small></div>
   </div>
   <div id="online-panel">
     <div><label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Your name</label>
@@ -243,8 +270,32 @@ body{font-family:system-ui,sans-serif;}
     <button id="btn-start-online">Start Game →</button>
   </div>
   <div id="lobby-msg"></div>
-  <a href="https://www.tantrix.com/english/TantrixGameRules.html" target="_blank" rel="noopener" style="font-size:15px;color:#333;text-decoration:none;margin-top:4px;font-weight:500;">📖 How to play — Official Tantrix Rules</a>
-  <span style="font-size:11px;color:#aaa;margin-top:2px;">v1.0</span>
+  <div id="home-howto">
+    <h3>🎮 How to play this app</h3>
+    <div class="howto-tip">
+      <span class="howto-icon">👆</span>
+      <span class="howto-text"><strong>Select a tile</strong> from your hand panel, then <strong>tap a hex</strong> on the board to place it.</span>
+    </div>
+    <div class="howto-tip">
+      <span class="howto-icon">↻</span>
+      <span class="howto-text"><strong>Rotate</strong> your selected tile using the <strong>↻ Rotate</strong> button at the bottom before placing.</span>
+    </div>
+    <div class="howto-tip">
+      <span class="howto-icon">🖱️</span>
+      <span class="howto-text"><strong>Pan the board</strong> by dragging with one finger (mobile) or clicking and dragging (desktop).</span>
+    </div>
+    <div class="howto-tip">
+      <span class="howto-icon">🤏</span>
+      <span class="howto-text"><strong>Pinch to zoom</strong> on mobile to get a better view of the board.</span>
+    </div>
+    <div class="howto-tip">
+      <span class="howto-icon">🟠</span>
+      <span class="howto-text"><strong>Forced spaces</strong> (amber) must be filled before you can make a free move. <strong>✕ spaces</strong> are blocked controlled sides.</span>
+    </div>
+
+  </div>
+  <a href="https://www.tantrix.com/english/TantrixGameRules.html" target="_blank" rel="noopener" style="font-size:15px;color:#333;text-decoration:none;margin-top:4px;font-weight:500;">📖 Official Tantrix Rules</a>
+  <span style="font-size:11px;color:#aaa;margin-top:2px;">v1.1.1</span>
 </div>
 
 <div id="setup">
@@ -300,12 +351,41 @@ body{font-family:system-ui,sans-serif;}
     <button id="bdone">→ Continue</button>
     <button id="brot">↻ Rotate</button>
     <button id="log-btn">📋 Log</button>
+    <button id="help-btn">❓ Help</button>
     <div id="bag-disp">Bag: <span id="bag-count">—</span></div>
   </div>
 
   <div id="log-panel">
     <div id="log-hdr"><span>📋 Game Log</span><button id="log-close" onclick="document.getElementById('log-panel').classList.remove('open')">✕</button></div>
     <div id="log-entries"><div id="log-empty">No moves yet</div></div>
+  </div>
+
+  <div id="help-panel">
+    <div id="help-hdr"><span>❓ How to play</span><button id="help-close" onclick="document.getElementById('help-panel').classList.remove('open')">✕</button></div>
+    <div id="help-body">
+      <h4>Placing a tile</h4>
+      <div class="tip"><span class="tip-icon">👆</span><span>Tap a tile in your hand panel to select it. It will highlight green.</span></div>
+      <div class="tip"><span class="tip-icon">🎯</span><span>Tap a hex on the board to place it. Colours must match all neighbours.</span></div>
+
+      <h4>Rotating a tile</h4>
+      <div class="tip"><span class="tip-icon">↻</span><span>With a tile selected, press <strong>↻ Rotate</strong> in the bottom bar to spin it 60°. Tap multiple times to cycle through all 6 orientations.</span></div>
+      <div class="tip"><span class="tip-icon">⌨️</span><span>On desktop, press <strong>R</strong> on your keyboard to rotate.</span></div>
+
+      <h4>Navigating the board</h4>
+      <div class="tip"><span class="tip-icon">👆</span><span><strong>Drag</strong> (one finger / click-drag) to pan around the board.</span></div>
+      <div class="tip"><span class="tip-icon">🤏</span><span><strong>Pinch</strong> with two fingers to zoom in and out on mobile.</span></div>
+
+      <h4>Forced &amp; blocked spaces</h4>
+      <div class="tip"><span class="tip-icon">🟠</span><span><strong>Amber hexes</strong> are forced spaces — you must fill one before making a free move.</span></div>
+      <div class="tip"><span class="tip-icon">✕</span><span><strong>Dark hexes with ✕</strong> are controlled sides — blocked until the adjacent forced space is filled.</span></div>
+
+      <h4>Online multiplayer</h4>
+      <div class="tip"><span class="tip-icon">🌐</span><span><strong>Coming soon!</strong> Online multiplayer is currently in development.</span></div>
+
+      <h4>Scoring</h4>
+      <div class="tip"><span class="tip-icon">📏</span><span>Longest connected line of your colour = 1pt per tile.</span></div>
+      <div class="tip"><span class="tip-icon">⟳</span><span>A closed <strong>loop</strong> scores <strong>double</strong> — 2pts per tile in the loop.</span></div>
+    </div>
   </div>
 </div>
 
@@ -1073,18 +1153,24 @@ function addLogEntry(entry){
 }
 
 document.getElementById('log-btn').addEventListener('click',()=>{
-  const panel=document.getElementById('log-panel');
-  panel.classList.toggle('open');
+  document.getElementById('help-panel').classList.remove('open');
+  document.getElementById('log-panel').classList.toggle('open');
+});
+document.getElementById('help-btn').addEventListener('click',()=>{
+  document.getElementById('log-panel').classList.remove('open');
+  document.getElementById('help-panel').classList.toggle('open');
 });
 document.getElementById('log-close').addEventListener('click',()=>{
   document.getElementById('log-panel').classList.remove('open');
 });
 document.addEventListener('click',(e)=>{
-  const panel=document.getElementById('log-panel');
-  if(panel.classList.contains('open')&&
-     !panel.contains(e.target)&&
-     e.target.id!=='log-btn'){
-    panel.classList.remove('open');
+  const logPanel=document.getElementById('log-panel');
+  if(logPanel.classList.contains('open')&&!logPanel.contains(e.target)&&e.target.id!=='log-btn'){
+    logPanel.classList.remove('open');
+  }
+  const helpPanel=document.getElementById('help-panel');
+  if(helpPanel.classList.contains('open')&&!helpPanel.contains(e.target)&&e.target.id!=='help-btn'){
+    helpPanel.classList.remove('open');
   }
 });
 
@@ -1107,9 +1193,7 @@ document.getElementById('btn-local').addEventListener('click',()=>{
 
 // ── Online game ─────────────────────────────────────────────────────────
 document.getElementById('btn-online').addEventListener('click',()=>{
-  document.getElementById('online-panel').style.display='flex';
-  buildLobbyCols();
-  initSocket();
+  // Online multiplayer coming soon — disabled
 });
 
 function buildLobbyCols(){
