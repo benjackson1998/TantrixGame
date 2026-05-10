@@ -23,7 +23,7 @@ body{font-family:system-ui,sans-serif;}
 #start-btn:hover{background:#1f4d33;}
 
 /* ── Game screen ── */
-#game{display:none;flex-direction:column;height:100%;}
+#game{display:none;flex-direction:column;height:100%;position:relative;}
 #hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:#1a1a1a;border-bottom:1px solid #222;flex-shrink:0;}
 #hdr h2{font-size:clamp(14px,3vw,18px);font-weight:700;color:#eee;}
 #hint{font-size:clamp(10px,1.8vw,12px);color:#555;}
@@ -65,6 +65,57 @@ body{font-family:system-ui,sans-serif;}
 #bag-disp{font-size:clamp(12px,2vw,14px);color:#555;margin-left:auto;}
 #bag-disp span{color:#bbb;font-weight:600;}
 #bdone{display:none;}
+
+/* ── Game over modal overlay ── */
+#gameover-overlay{
+  display:none;position:absolute;inset:0;
+  background:rgba(0,0,0,0.6);
+  z-index:100;
+  align-items:center;justify-content:center;
+  animation:fadeIn 0.3s ease;
+}
+#gameover-overlay.visible{display:flex;}
+#gameover-modal{
+  background:var(--color-bg,#1a1a1a);
+  border:1px solid #2a2a2a;
+  border-radius:16px;
+  padding:36px 40px;
+  text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+  max-width:340px;width:90%;
+  animation:slideUp 0.35s ease;
+}
+#gameover-modal h3{font-size:clamp(20px,4vw,26px);font-weight:700;color:#eee;margin:0;}
+#gameover-modal p{font-size:clamp(13px,2.5vw,15px);color:#888;margin:0;line-height:1.5;}
+#btn-see-scores{
+  padding:13px 32px;
+  background:#ffffff;border:1px solid #dddddd;
+  color:#111111;font-size:clamp(14px,2.5vw,16px);font-weight:600;
+  border-radius:10px;cursor:pointer;margin-top:4px;
+  width:100%;
+}
+#btn-see-scores:hover{background:#f0f0f0;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── End / results screen ── */
+#endscreen{display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:24px;padding:28px;background:#111;}
+#endscreen h2{font-size:clamp(22px,5vw,30px);color:#eee;font-weight:700;letter-spacing:.04em;text-align:center;}
+#endscreen .subtitle{font-size:clamp(13px,2.5vw,16px);color:#666;text-align:center;}
+#results-list{width:100%;max-width:420px;display:flex;flex-direction:column;gap:10px;}
+.result-row{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:10px;background:#1a1a1a;border:1px solid #2a2a2a;}
+.result-row.winner{background:#0f2a1a;border-color:#2a6040;box-shadow:0 0 0 1px #2a6040;}
+.result-rank{font-size:clamp(20px,4vw,26px);font-weight:900;color:#555;min-width:32px;text-align:center;}
+.result-row.winner .result-rank{color:#3db87a;}
+.result-dot{width:clamp(14px,3vw,18px);height:clamp(14px,3vw,18px);border-radius:50%;flex-shrink:0;}
+.result-name{font-size:clamp(14px,2.5vw,17px);font-weight:600;color:#ccc;flex:1;}
+.result-score{font-size:clamp(20px,4vw,26px);font-weight:900;text-align:right;}
+.result-detail{font-size:clamp(11px,1.8vw,13px);color:#666;text-align:right;margin-top:1px;}
+.result-crown{font-size:clamp(18px,3.5vw,24px);margin-left:4px;}
+#btn-home{padding:clamp(12px,2.5vw,16px) clamp(32px,6vw,52px);background:#1a3d28;border:1px solid #2a6040;color:#3db87a;font-size:clamp(15px,3vw,18px);font-weight:600;border-radius:10px;cursor:pointer;margin-top:8px;}
+#btn-home:hover{background:#1f4d33;}
+#endscreen .rules-link{font-size:12px;color:#444;text-decoration:none;margin-top:4px;}
+#endscreen .rules-link:hover{color:#666;}
 
 /* ── Mobile: panels below board ── */
 @media(max-width:600px){
@@ -155,7 +206,17 @@ body{font-family:system-ui,sans-serif;}
 <div id="game">
   <div id="hdr"><h2>⬡ TANTRIX</h2><span id="hint">Select tile · tap twice on board to rotate · drag to pan</span><a href="https://www.tantrix.com/english/TantrixGameRules.html" target="_blank" rel="noopener" style="font-size:11px;color:#555;text-decoration:none;margin-left:10px;white-space:nowrap;">📖 Rules</a></div>
   <div id="sbar"><span id="msg" class="info">…</span><span id="phase-ind" class="pi"></span></div>
-  <div id="main">
+  <!-- Game over modal overlay (sits over the board) -->
+<div id="gameover-overlay">
+  <div id="gameover-modal">
+    <div style="font-size:clamp(36px,8vw,48px);line-height:1;">🏆</div>
+    <h3>Game over!</h3>
+    <p>All tiles have been played.<br>Time to calculate the final scores.</p>
+    <button id="btn-see-scores">See final scores →</button>
+  </div>
+</div>
+
+<div id="main">
     <div id="ba"><canvas id="bc"></canvas></div>
     <div id="panels"></div>
   </div>
@@ -165,6 +226,15 @@ body{font-family:system-ui,sans-serif;}
     <button id="brot">↻ Rotate</button>
     <div id="bag-disp">Bag: <span id="bag-count">—</span></div>
   </div>
+</div>
+
+<!-- End / results screen -->
+<div id="endscreen">
+  <h2>🏆 Game Over!</h2>
+  <p class="subtitle">Final scores</p>
+  <div id="results-list"></div>
+  <button id="btn-home">🏠 Back to Home</button>
+  <a href="https://www.tantrix.com/english/TantrixGameRules.html" target="_blank" rel="noopener" class="rules-link">📖 Official Tantrix Rules</a>
 </div>
 
 <script>
@@ -402,6 +472,8 @@ function canFillAnyForced(){
 }
 function startTurn(){
   G.sel=null;G.selP=-1;G.rot=0;
+  // Safety net: catch game over if somehow missed in endTurn
+  if(G.bag.length===0&&G.players.every(p=>p.hand.length===0)){endGame();return;}
   if(canFillAnyForced()){G.turnPhase='forced1';setMsg(`P${G.cur+1} (${CN[G.players[G.cur].col]}): fill forced spaces first`,'warn');}
   else{G.turnPhase='free';setMsg(`P${G.cur+1} (${CN[G.players[G.cur].col]}): make your free move`,'info');}
   updateUI();render();
@@ -444,14 +516,76 @@ function _doClickCore(px,py){
   if(G.bag.length===0&&G.players.every(p=>p.hand.length===0)){endGame();return;}
   updateUI();render();
 }
-function endTurn(){G.cur=(G.cur+1)%G.players.length;startTurn();}
+function endTurn(){
+  // Check game over: bag empty and all hands empty
+  if(G.bag.length===0&&G.players.every(p=>p.hand.length===0)){endGame();return;}
+  G.cur=(G.cur+1)%G.players.length;startTurn();
+}
+function buildResultsList(){
+  const sc=G.players.map((p,i)=>{const bs=bestScore(p.col);return{i,col:p.col,bs};}).sort((a,b)=>b.bs.score-a.bs.score);
+  const list=document.getElementById('results-list');
+  list.innerHTML='';
+  sc.forEach((pl,rank)=>{
+    const isWinner=rank===0;
+    const row=document.createElement('div');
+    row.className='result-row'+(isWinner?' winner':'');
+
+    const rankEl=document.createElement('div');
+    rankEl.className='result-rank';
+    rankEl.textContent=rank===0?'1st':rank===1?'2nd':rank===2?'3rd':`${rank+1}th`;
+
+    const dot=document.createElement('div');
+    dot.className='result-dot';
+    dot.style.background=CLR[pl.col];
+
+    const name=document.createElement('div');
+    name.className='result-name';
+    name.textContent=`P${pl.i+1} ${CN[pl.col]}${isWinner?' 👑':''}`;
+
+    const right=document.createElement('div');
+    right.style.textAlign='right';
+
+    const score=document.createElement('div');
+    score.className='result-score';
+    score.style.color=CLR[pl.col];
+    score.textContent=pl.bs.score+' pts';
+
+    const detail=document.createElement('div');
+    detail.className='result-detail';
+    if(pl.bs.loop>0&&pl.bs.loop*2>=pl.bs.line){
+      detail.textContent=`Loop of ${pl.bs.loop} tiles ×2`;
+    } else if(pl.bs.line>0){
+      detail.textContent=`Line of ${pl.bs.line} tiles`;
+    } else {
+      detail.textContent='No score';
+    }
+    // Show both if notable
+    if(pl.bs.loop>0&&pl.bs.line>0){
+      detail.textContent=`Loop ×2: ${pl.bs.loop*2}pts  |  Line: ${pl.bs.line}pts`;
+    }
+
+    right.append(score,detail);
+    row.append(rankEl,dot,name,right);
+    list.appendChild(row);
+  });
+
+  // Switch to end screen (called from modal button)
+  document.getElementById('game').style.display='none';
+  document.getElementById('endscreen').style.display='flex';
+}
+
 function endGame(){
   G.phase='end';
-  const sc=G.players.map((p,i)=>{const bs=bestScore(p.col);return{i,col:p.col,bs};}).sort((a,b)=>b.bs.score-a.bs.score);
-  const w=sc[0],bs=w.bs;
-  const detail=bs.loop>0?`loop of ${bs.loop} tiles ×2 = ${bs.score}pts`:`line of ${bs.line} tiles = ${bs.score}pts`;
-  setMsg(`Game over! P${w.i+1} (${CN[w.col]}) wins — ${detail}!`,'good');
-  document.getElementById('phase-ind').textContent='';document.getElementById('bdone').style.display='none';render();
+  // Clear all hands — the game is over, no tiles should show in panels
+  G.players.forEach(p=>p.hand=[]);
+  // Also drain the bag so nothing can be drawn
+  G.bag=[];
+  // Re-render panels immediately so hands appear empty
+  render();
+  // 1 second pause so the last tile placement is visible, then show modal
+  setTimeout(()=>{
+    document.getElementById('gameover-overlay').classList.add('visible');
+  },1000);
 }
 // Returns {score,line,loop}. Loop tiles count double.
 function bestScore(col){
@@ -671,6 +805,18 @@ function renderPanels(){
 document.getElementById('bn').addEventListener('click',()=>{
   document.getElementById('game').style.display='none';
   document.getElementById('setup').style.display='flex';buildSetup();
+});
+document.getElementById('btn-home').addEventListener('click',()=>{
+  document.getElementById('endscreen').style.display='none';
+  document.getElementById('lobby').style.display='flex';
+});
+
+document.getElementById('btn-see-scores').addEventListener('click',()=>{
+  // Build the results list, hide modal, show end screen
+  buildResultsList();
+  document.getElementById('gameover-overlay').classList.remove('visible');
+  document.getElementById('game').style.display='none';
+  document.getElementById('endscreen').style.display='flex';
 });
 document.getElementById('bdone').addEventListener('click',()=>{
   if(G.turnPhase==='forced1'){G.turnPhase='free';setMsg(`P${G.cur+1}: make your free move`,'info');updateUI();render();}
