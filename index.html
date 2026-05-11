@@ -7,7 +7,7 @@ body{font-family:system-ui,sans-serif;}
 #app{display:flex;flex-direction:column;height:100dvh;min-height:500px;background:#111;}
 
 /* ── Setup / lobby screen ── */
-#setup{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:20px;padding:28px;}
+#setup{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:clamp(10px,2vh,20px);padding:clamp(16px,3vh,28px);overflow-y:auto;}
 #setup h2{font-size:clamp(28px,6vw,42px);color:#111;font-weight:700;letter-spacing:.05em;}
 #setup .sub{font-size:clamp(13px,2.5vw,16px);color:#666;}
 #cnt-row{display:flex;gap:12px;align-items:center;}
@@ -42,10 +42,10 @@ body{font-family:system-ui,sans-serif;}
 
 /* ── Game screen ── */
 #game{display:none;flex-direction:column;height:100%;position:relative;}
-#hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:#1a1a1a;border-bottom:1px solid #222;flex-shrink:0;}
+#hdr{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:#1a1a1a;border-bottom:1px solid #222;flex-shrink:0;}
 #hdr h2{font-size:clamp(16px,3.5vw,22px);font-weight:800;color:#ffffff;letter-spacing:0.04em;}
 #hint{font-size:clamp(10px,1.8vw,12px);color:#555;}
-#sbar{padding:6px 14px;background:#161616;border-bottom:1px solid #1e1e1e;font-size:clamp(14px,2.5vw,17px);flex-shrink:0;min-height:34px;display:flex;align-items:center;gap:8px;}
+#sbar{padding:4px 12px;background:#161616;border-bottom:1px solid #1e1e1e;font-size:clamp(13px,2.5vw,17px);flex-shrink:0;min-height:28px;display:flex;align-items:center;gap:8px;}
 #msg{flex:1;}
 #msg.good{color:#3db87a;}#msg.bad{color:#e05555;}#msg.info{color:#5599dd;}#msg.warn{color:#cc8833;}
 #phase-ind{font-size:clamp(12px,2.2vw,15px);padding:4px 12px;border-radius:10px;font-weight:700;flex-shrink:0;}
@@ -129,7 +129,7 @@ body{font-family:system-ui,sans-serif;}
 .badge{position:absolute;top:2px;right:2px;font-size:11px;font-weight:700;padding:2px 5px;border-radius:3px;background:#cc8833;color:#fff;line-height:1;}
 
 /* ── Bottom bar ── */
-#bbar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#1a1a1a;border-top:1px solid #222;flex-shrink:0;}
+#bbar{display:flex;align-items:center;gap:6px;padding:6px 10px;background:#1a1a1a;border-top:1px solid #222;flex-shrink:0;}
 #bbar button{font-size:clamp(14px,2.5vw,17px);padding:clamp(9px,1.8vw,12px) clamp(14px,2.8vw,20px);border-radius:6px;border:1px solid #444;background:#252525;color:#ddd;cursor:pointer;touch-action:manipulation;}
 #bbar button:hover{background:#333;color:#fff;}
 .bpri{background:#1a3d28!important;border-color:#2a6040!important;color:#3db87a!important;}
@@ -191,7 +191,7 @@ body{font-family:system-ui,sans-serif;}
 /* ── Mobile: panels below board ── */
 @media(max-width:600px){
   #main{flex-direction:column;}
-  #panels{width:100%;height:auto;max-height:26vh;border-left:none;border-top:1px solid #222;flex-direction:row;overflow-x:auto;overflow-y:hidden;flex-shrink:0;}
+  #panels{width:100%;height:170px;max-height:170px;border-left:none;border-top:1px solid #222;flex-direction:row;overflow-x:auto;overflow-y:hidden;flex-shrink:0;}
   .pp{border-bottom:none;border-right:1px solid #1e1e1e;min-width:200px;flex-shrink:0;padding:8px 10px;}
   .pp-hdr{margin-bottom:6px;}
   .hgrid{gap:5px;}
@@ -201,8 +201,11 @@ body{font-family:system-ui,sans-serif;}
   #hdr h2{font-size:20px;}
   #sbar{font-size:16px;min-height:38px;}
   #phase-ind{font-size:15px;padding:5px 14px;}
-  #bbar{padding:8px 10px;gap:6px;}
-  #bbar button{font-size:14px;padding:10px 12px;}
+  #bbar{padding:5px 8px;gap:5px;}
+  #bbar button{font-size:13px;padding:8px 10px;}
+  #hdr{padding:4px 10px;}
+  #sbar{padding:3px 10px;min-height:24px;font-size:13px;}
+  #phase-ind{font-size:12px;padding:2px 8px;}
   #bag-disp{font-size:16px;}
   #brot{background:#1a2a3d!important;border-color:#2a4060!important;color:#5599dd!important;font-size:18px!important;padding:11px 20px!important;}
   /* Home screen mobile */
@@ -219,15 +222,16 @@ body{font-family:system-ui,sans-serif;}
   #scheme-select{font-size:15px;padding:11px 36px 11px 14px;}
   .swatch-label{font-size:12px;}
   .swatch-dot{width:34px;height:34px;}
-  #home-howto{padding:12px 14px;}
-  #home-howto h3{font-size:13px;}
-  .howto-text{font-size:12px;}
-  .howto-icon{font-size:18px;}
+  #home-howto{padding:10px 12px;margin-top:0;}
+  #home-howto h3{font-size:12px;margin-bottom:6px;}
+  .howto-text{font-size:11px;}
+  .howto-icon{font-size:16px;}
+  .howto-tip{margin-bottom:5px;}
   .badge{font-size:11px;padding:2px 5px;}
 }
 </style>
 <style>
-#lobby{display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:clamp(16px,3vh,28px);padding:clamp(20px,4vw,40px);}
+#lobby{display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:clamp(10px,2vh,20px);padding:clamp(12px,3vw,28px);overflow-y:auto;}
 #lobby h2{font-size:clamp(26px,6vw,40px);color:#111;font-weight:700;letter-spacing:.05em;}
 .mode-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;}
 .mode-btn{padding:clamp(18px,3.5vw,28px) clamp(24px,5vw,44px);border-radius:12px;border:2px solid #444;background:#1a1a1a;color:#ddd;font-size:clamp(17px,3.5vw,22px);font-weight:600;cursor:pointer;text-align:center;min-width:clamp(150px,30vw,200px);line-height:1.4;}
@@ -302,7 +306,7 @@ body{font-family:system-ui,sans-serif;}
 
   </div>
   <a href="https://www.tantrix.com/english/TantrixGameRules.html" target="_blank" rel="noopener" style="font-size:15px;color:#333;text-decoration:none;margin-top:4px;font-weight:500;">📖 Official Tantrix Rules</a>
-  <span style="font-size:11px;color:#aaa;margin-top:2px;">v1.1.2</span>
+  <span style="font-size:11px;color:#aaa;margin-top:2px;">v1.1.3</span>
 </div>
 
 <div id="setup">
@@ -939,13 +943,14 @@ function resizeBoard(){
   const a=document.getElementById('ba');bw=a.clientWidth;bh=a.clientHeight;
   canvas.width=bw;canvas.height=bh;
   // Compute hex size: larger on mobile so the board feels zoomed in
-  const mobile=window.innerWidth<=600;
+  const mobile=window.innerWidth<=700;
   if(mobile){
-    // Use screen width directly — board width is the limiting factor on portrait phones
-    // Target ~3 tiles across = bw / (3 * sqrt(3)) = bw/5.2
-    const sw=window.innerWidth;
-    HS=Math.round(sw/5.2);
-    HS=Math.max(55,Math.min(100,HS));
+    // Very aggressive sizing for mobile portrait
+    // Use screen.width as most reliable source (not affected by browser chrome)
+    const sw=Math.min(screen.width,window.innerWidth,bw)||390;
+    // Target ~2.5 tiles across — feels large and playable
+    HS=Math.round(sw/4.2);
+    HS=Math.max(70,Math.min(130,HS));
   } else {
     HS=Math.round(Math.min(bw,bh)/14);
     HS=Math.max(42,Math.min(72,HS));
@@ -1077,8 +1082,8 @@ function renderPanels(){
   const forced=getForcedSpaces();
   const isMobile=window.innerWidth<=600;
   // Tile canvas size: bigger on desktop
-  const tSz=isMobile?64:90;
-  const hexSz=isMobile?24:34;
+  const tSz=isMobile?72:90;
+  const hexSz=isMobile?27:34;
 
   G.players.forEach((pl,p)=>{
     const isAct=p===G.cur;
